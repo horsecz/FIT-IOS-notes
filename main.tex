@@ -4,6 +4,9 @@
 \usepackage{times}
 \usepackage[czech]{babel}
 \usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
+\usepackage{graphics}
+\usepackage{caption}
 
 \title{IOS - Operacni systemy}
 \date{}
@@ -833,7 +836,7 @@ Rozumime jev, ktery vznika v pametech postupnym obsazovanim a uvolnovanim pameti
 \begin{itemize}
     \item na disku za urcitych okolnosti (v beznych FS nevznikaji) mohou vzniknout casti prostoru, ktere jsou jiz dale nevyuzitelne, protoze jsou prilis male (tldr vznik volnych useku, ktere nejdou vyuzit)
     \begin{itemize}
-        \item okolnosti (pri kterych vzniknou nevyuzitelne casti prostoru): pri alokovani diskoveho prostoru spojite (na miru souboru ci jeho castem, nepridelovani po jednotkach pevne velikosti) a navic budu mit dolni mez urcujici velikost diskoveho prostoru tak, aby byl pouzitelny (muze vzniknout v souvislosti s tim, ze do pouzitych diskovych oblasti si mohu ukladat pomocne informace, k cemu se pouzivaji - pokud bude informace vetsi nez "volna dira" - nepouzitelna)
+        \item okolnosti (pri kterych vzniknou nevyuzitelne casti prostoru): pri alokovani diskoveho prostoru spojite (na miru souboru ci jeho castem, nepridelovani po jednotkach pevne velikosti) a navic budu mit dolni mez urcujici velikost diskoveho prostoru tak, aby byl pouzitelny (muze vzniknout v souvislosti s tim, ze do pouzitych diskovych oblasti si mohu ukladat pomocne informace, k cemu se pouzivaji - pokud bude informace vetsi nez "volna dira" - nepouzitelna) - mam na disku bloky volneho mista o pozadovane velikosti (1GB, soubor, 0.5GB), ale protoze chci ukladat spojite (soubor o velikosti 1.5GB), nelze takove misto vyuzit
         \item vznikne nespojite rozlozeny soubor (viz priklad) a je nutne si pamatovat v pomocnych datech = metadatech informace o tom, kde jednotlive casti souboru jsou (ukladaji se na mista, kde jednotlive casti jsou, "odkazuji" se na dalsi metadata - dalsi casti smazaneho souboru),
     \end{itemize}
     \item cim vice casti souboru - tim vice metadat - cim vice fragmentovane - tim vice je pristup na data pomalejsi (u HDD se ceka navic na natoceni hlavicek a rotace disku) \\
@@ -843,7 +846,7 @@ Rozumime jev, ktery vznika v pametech postupnym obsazovanim a uvolnovanim pameti
 \begin{itemize}
     \item rozlozeni souboru po disku (snaza ukladat soubory na disk tak, aby nebyly nutne za sebou, ale bylo mezi nimi volny prostor),
     \item pouzivani predalokace (uzivatel si pozada filesystem o vymezeni urciteho prostoru na disku, napr. databaze),
-    \item odlozena alokace (filesystem nezapise ihned po zmene souboru, ale chvili pocka - pocita s tim, ze uzivatel bude chtit menit soubor "za chvili" znovu - az nebude delsi dobu dochazet ke zmenam, pote hleda vhodny volny prostor) \\
+    \item odlozena alokace (=allocate-on-flush, filesystem nezapise ihned po zmene souboru, ale chvili pocka - pocita s tim, ze uzivatel bude chtit menit soubor "za chvili" znovu - az nebude delsi dobu dochazet ke zmenam, pote hleda vhodny volny prostor) \\
 \end{itemize}
 
 \noindent Pri (intenzivnim) beznem pouzivani disku se vsak fragmentaci nelze vyhnout. Pokud by byla fragmentace prilis vyrazna, je mozne pouzit defragmentacni nastroje, ktere provadeji kopirovani, presouvani casti souboru a reorganizaci diskoveho prostoru tak, aby se fragmentace odstranila - casove narocna operace. \\
@@ -964,10 +967,501 @@ V pocitaci je mozne mit vicero fyzickych disku, ktere je dale mozne rozdelit na 
 \textit{formatovani} zn., ze se nainstaluji metadata (ridici data) souboroveho systemu do prislusne diskove oblasti, v ramci toho se mohou vymazat vsechna data na dane oblasti \\[0.2em]
 
 \newpage
+\setlength{\parindent}{0pt}
 
 \section{}
-\textbf{Sesta prednaska:} pokracovani Spravy souboru. Zurnalovani, 
+\textbf{Sesta prednaska:} pokracovani Spravy souboru. Zurnalovani, jeho implementace a alternativy, Copy-on-write, Klasicky UNIXovy system souboru FS, i-uzly, kde a jak jsou data ulozena, pocty odkazu, limit maximalni velikosti souboru, vyhody a nevyhody FS, jine zpusoby organizace souboru, EXT4, NTFS, Organizace volneho prostoru na disku, deduplikace, typy souboru v UNIXu, adresar, montovani disku
 \subsection{Zurnalovani}
-TODO
+Je technika zalozena na vytvareni zurnalu.  \\
+
+\begin{itemize}
+    \item souborove systemy se zurnalem jsou treba ext3, ext4, ufs, XFS, JFS, NTFS, ..
+    \item zurnalovani umoznuje spolehlivejsi (nikdy nemame obecne zajisteno, ze se nic spatneho stat nemuze) a     \item rychlejsi navrat (nez nejake utility) do konzistentniho stavu po chybach
+    \item data obvykle zurnalovana nejsou (velka rezie), ale mohou byt
+    \item zavisi na tom, ze operace, ktere zurnalovani implementuji, se provedou ve spravnem poradi -- nutnost spoluprace s planovacem, take disky si samy data preusporadavaji (nelze nijak ovlivnit) \\
+\end{itemize}
+
+\noindent\textbf{Zurnal:}
+\begin{itemize}
+    \item zapis zurnalu je p\v{r}ed\v{r}azen\'{y},
+    \item vytvari se v nem cyklicky prepisovany buffer,
+    \item p\v{r}ed\v{r}azenost zapisu do zurnalu mi zaruci, ze operace pokryte zurnalovanim jsou atomicke - vytvari transakce \\
+\end{itemize}
+
+Kompromis mezi zurnalovanim a nezurnalovanim dat je \textbf{p\v{r}ed\v{r}azen\'{i} zapisu dat na disk pred zapisem metadat do zurnalu} (a nasledne zapis ostrych metadat na disk). Priklad:
+\begin{itemize}
+    \item zapisuji do souboru - bud vytvarim zcela novy nebo ho zvetsuji (typicke zpusoby zapisu),
+    \item pri zvetsovani se nejprve zapisou data na disk za existujici data (bez poznamenavani informace o tom, ze se soubor zvetsuje),
+    \item pokud operace selze, soubor zustane v puvodnim stavu (diky neupravenym metadatum puvodniho souboru),
+    \item teprve az data budou na disku, tak se do zurnalu zapise informace o zvetsovani souboru,
+    \item pote se zmeni metadata souboru (a uzivatel se k datum dostane),
+    \item pri selhani napajeni v moment, kdy jsou metadata v zurnalu, ale ne na disku, je mozne tyto metadata obnovit \\
+\end{itemize}
+
+\textbf{Proces mazani souboru na disku:}
+\begin{itemize}
+    \item odstraneni zaznamu z adresare,
+    \item uvolneni uzlu (metadat souboru),
+    \item uvolneni oblasti pouzitych tim souborem \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{zurnal} je specialni soubor ci specialni oblast na disku slouzici pro zaznamy modifikovanych metadat (dat o datech), pripadne i dat pred jejich zapisem na disk (v podobe beznych dat) \\[0.2em]
+\textit{p\v{r}ed\v{r}azen\'{y}} znamena, ze zapis do zurnalu se provede pred ostrym zapisem "uzitecnych" dat (ci metadat) na disk \\[0.2em]
+\textit{atomicke operace} zn., ze but operace uspeje cela (vsechny dilci kroky) nebo neuspeje vubec (zadny dilci krok) \\
+
+\subsubsection{Implementace zurnalovani}
+Existuji 2 zakladni pristupy k implementaci zurnalovani. \\
+\textbf{REDO:}
+\begin{itemize}
+    \item implementace na zaklade dokonceni transakci,
+    \item pouziva napr. ext3, ext4,
+    \item sekvence dilcich operaci (vytvarejici tu operaci, kterou chci provest) se zapise do zurnalu (zacatek, konec transakce, kontrolni soucet),
+    \item pote se operace provadi na disku,
+    \item po uspesnem dokonceni se transakce ze zurnalu uvolni,
+    \item pri selhani a pote zotaveni se system podiva do zurnalu, podiva se po neuvolnenych transakcich, jestli jsou cele - pocatecni a koncova znacka, jestli sedi kontrolni soucet - pokud vse sedi, tak system provede vsechny operace znovu \\
+
+\end{itemize}
+\textbf{UNDO:}
+\begin{itemize}
+    \item implementace na zaklade anulace transakci,
+    \item v kombinaci s REDO se pouziva v NTFS,
+    \item proklada zaznam dilcich operaci (ktere se maji provest) do zurnalu a nasledne jejich provedeni na ostrych datech (zaznamena dilci operaci - provede ji),
+    \item probehne cela transakce - zaznam ze zurnalu se uvolni,
+    \item pri chybe se eliminuji vsechny nedokoncene transakce (vsechny provedene dilci kroky se musi vratit - vrati se disk do puvodniho stavu) \\
+\end{itemize}
+
+Pri implementaci zurnalovani je klicove \textbf{dodrzeni poradi kroku, ve kterem se provadeji}. (U REDO napr. je nutne, aby se nejprve zapsaly sekvence operaci do zurnalu a teprve pote se provadely operace na disku) Pokud tato sekvence nebude dodrzena, zurnal nebude spravne fungovat. \\
+
+\newpage
+
+\subsubsection{Copy-on-write}
+Je alternativa k zurnalovani pouzivana napriklad v ZFS (OpenZFS), BTRFS, ReFS (Resilient File System).
+\begin{itemize}
+    \item kopie pri zapisu,
+    \item zalozeno na tom, ze vsechna nova data / metadata se zapisi na disk, a pote se zpristupni,
+    \item vyuziva se pritom toho, ze obsah disku je popsam hierarchickou stromovou strukturou,
+    \item zmeny se provadeji v souladu s touto strukturou (od listu ke koreni),
+    \item pokud vypadne napajeni v moment, kdy data (bloky) nejsou jeste zpristupnena, data nejsou dostupne z korene stromu a jakoby se nic nestalo,
+    \item pokud se mi tyto data podari zapsat uspesne, postupne zacnu upravovat vsechny uzly vedouci az ke koreni a zpristupnim nova data,
+    \item teprve po modifikaci korenu se stanou zmenena data (uzly) dostupne
+    \begin{itemize}
+        \item koren je nutne zabezpecit, aby nedoslo k chybe pri zapisu do nej
+        \item stary korenovy uzel se neprepisuje, ale pouze se tam zapise nova verze korenoveho zaznamu (s casovym razitkem)
+        \item soucasne tam bude zabezpecovaci kod (kontrolni soucet),
+        \item pokud dojde ke krachu systemu, staci si nacist vsechny koreny, zkontrolovat kontrolni soucty, vybrat si vsechny, kde sedi kontrolni soucty, s nejnovejsim casovym razitkem a tyto pouziju (pokud dojde k chybe nez se stihne zapsat novy koren, pouzije se ten puvodni) \\
+    \end{itemize}
+\end{itemize}
+
+\textbf{Vyhodami copy-on-write jsou:}
+\begin{itemize}
+    \item snimky souboroveho systemu (zapamatuje se pouze korenovy uzel - minimalni rezie),
+    \item klony souboroveho systemu (vytvori se pozadovany pocet kopii korenoveho uzlu),
+    \item vyhodou je, ze nezmenene uzly (data) a listy budou na disku pouze jednou, pouze je nutne si pamatovat zmenene uzly / listy a cestu ke koreni + koren (kopie stale ukazuji na stejny strom). \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{stromova struktura} (copy-on-write) je vyhledavaci strom, ktery popisuje veskery obsah disku, typicky se v nem vyhledava na zaklade unikatni identifikace souboru \\[0.2em]
+\textit{adresare} (copy-on-write) jsou specialni soubory ulozeny na disku, ktere jsou dostupne ve strome (stromove strukture) \\[0.2em]
+\textit{snimek souboroveho systemu} ulozi se obsah disku tak, ze je mozne se k nemu pozdeji vratit \\[0.2em]
+\textit{klon souboroveho systemu} je vytvoreni 2 kopii souboroveho systemu a od daneho okamziku je mozne s kazdou kopii pracovat samostatne (napr. pri vetsim poctu VM, kdy vsechny VM sdili stejny pocatecni obsah disku, ale od urciteho momentu kazda VM chce obsah menit samostatne) \\
+
+\newpage
+
+\subsubsection{Dalsi alternativy zurnalovani}
+\textbf{Soft updates:}
+\begin{itemize}
+    \item pouziva se v UFS (FreeBSD systemy),
+    \item filesystem se snazi sledovat zavislosti mezi tim jaka data a metadata se meni,
+    \item uzpusobuje poradi zapisu metadat a dat na disk tak, aby v jakemkoli okamziku byl obsah na disku konzistentni (az na moznost vzniku "garbage") \\
+\end{itemize}
+
+\textbf{Log-structured file systems:}
+\begin{itemize}
+    \item logovaci souborove systemy (= strukturovane jako log),
+    \item pouziva se v LFS, UDF, F2FS,
+    \item cely souborovy system ma charakter jednoho velkeho logu,
+    \item ktery se zapisuje v cyklicky prepisovane pameti napric celym diskem,
+    \item posledni obsah disku je vzdy dostupny pres posledni zaznam (a odkazy, ktere z nej vedou),
+    \item pri provadeni zmen se pridaji data napr. za aktualni konec vyuziteho diskoveho prostoru, prida se k tomu zaznam (o tom co se zmenilo), zpristupni se data z posledniho zaznamu. \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{"garbage"} je cast prostoru na disku, ktera se tvari jako obsazena, ale neni \\[0.2em]
+\textit{logem} rozumime soubor, ktery obsahuje zaznamy o zmenach (nebo: log = zapis o zmenach) \\
+
+\newpage
+
+\subsection{Klasicky UNIXovy system souboru (FS)}
+Je puvodni filesystem unixu (70. leta). Vyvinul se z nej UFS, z nej zase EXT2, 3 (pote vznikl i EXT4). \\
+
+\textbf{Souborovy system byl rozclenen (na urovni logickych disku) na:}
+\begin{itemize}
+    \item boot blok - obsahoval informace (kod, cast kodu) potrebne pro zavedeni pri startu,
+    \item super blok - informace o souborovem systemu (typ, verze, velikost, pocet i-uzlu, volne misto, korenovy adresar, volne i-uzly, ..),
+    \item tabulka i-uzlu - tabulka (pole n i-uzlu) pouzita s popisy souboru,
+    \item datove bloky - data souboru, metadata (pomocne adresovaci bloky). \\
+\end{itemize}
+
+\textbf{Zakladni rozlozeni FS bylo zmodifikovano v navazujicich filesystemech:}
+\begin{itemize}
+    \item datove bloky byly rozdeleny do skupin, 
+    \item kazda skupina mela svoje i-uzly,
+    \item duvodem byla lepsi lokalita, prostorova blizkost dat a metadat (typicky pri praci se soubory jsou nutne i jeho metadata),
+    \item pote tedy ta struktura vypadala takto: boot blok, super blok, usek i-uzlu, usek dat, usek i-uzlu, usek dat, .. \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{i-uzel} je zakladni datova struktura reprezentujici kazdy jeden soubor v typickych UNIXovych systemech (pozn. pri formatovani se urci dopredu maximalni pocet souboru, ktere na diskovem oddilu budou existovat) \\
+
+\subsubsection{i-uzel}
+Zakladni datova struktura popisujici soubor v UNIXu (nebo viz definice hore). Ke kazdemu souboru musi byt i-uzel. Ten obsahuje metadata o souboru: 
+\begin{itemize}
+    \item stav i-uzlu (alokovany, volny)
+    \item typ souboru (obycejny, adresar, zarizeni, pojmenovana roura, ..),
+    \item delka souboru v bajtech,
+    \item casy mtime (posledni modifikace dat - zapis), atime (posledni pristup - cteni), ctime (posledni modifikace i-uzlu),
+    \item UID, GID,
+    \item pristupova prava (cislo, napr. 0644 = rw-r--r--),
+    \item pocet pevnych odkazu (neboli jmen souboru),
+    \item informace o tom, kde se nachazi data o souboru (tabulka odkazu na datove bloky a dalsi informace nebo odkazy na pomocne bloky s dalsimi metadaty, napr. ACL, extended attributes, dtime - udaj o smazani souboru, ..) \\
+\end{itemize}
+
+Jmeno souboru neni v i-uzlu, ale je ulozeno v adresari. \\
+
+\textbf{definice:} \\[0.5em]
+\textit{UID} je cislo identifikace vlastnika \\[0.2em]
+\textit{GIT} je cislo identifikace skupiny \\[0.2em]
+\textit{ACL} zn. Access Control List, pristupove seznamy rozsirujici zakladni UNIXova prava tak, ze je mozne priradit konkretni prava ke konkretnim uzivatelum \\[0.2em]
+\textit{extended attributes} zn. rozsirene atributy, s jakymi specifickymi prave se muze soubor napr. spoustet \\[0.2em]
+\textit{ctime} je posledni zmena i-uzlu, vyuzitelne napr. pokud se zfalsuje mtime, posledni zmena souboru se pozna prave podle ctime \\
+
+\subsubsection{Kde a jak jsou ulozena data}
+\begin{itemize}
+    \item v i-uzlu je rada primych (az 10, novejsi unixove fs maji 12) i neprimych odkazu na data,
+    \item prime odkazy odkazuji na alokacni bloky na disku,
+    \item pokud je potreba vice odkazu, pouzije se neprimy odkaz prvni urovne, ktery odkazuje na specialni alokacni blok neobsahujici data, ale dalsi prime odkazy na data,
+    \item pokud nestaci ani to, pouzije se neprimy odkaz druhe urovne, ktery odkazuje na pomocny adresovaci blok, ktery obsahuje dalsi neprime odkazy 1. urovne, ktere odkazuji na dalsi prime odkazy (a ty odkazuji na data) - vznika strom
+    \item pokud ani to stacit nebude, pouzije se adresovaci blok 3. urovne, vedouci na adresovaci bloky s neprimymi odkazy 2. urovne, kazdy z nich na bloky s odkazy 1. urovne, ty vedou na prime odkazy a ty na data.
+\end{itemize}
+
+\begin{figure}[htb]
+    \centering
+    \scalebox{1.6}{\includegraphics{6.2.2.jpg}}
+    \caption{z prezentace IOS: Souborove systemy, slide 23 - odkazy v i-uzlech}
+\end{figure}
+
+\newpage
+
+\subsubsection{Pocty odkazu}
+\begin{itemize}
+    \item neprimy odkaz 1. urovne - pri 4 KiB clusteru je to 1024 odkazu (1 odkaz = 4B) = 1024 datovych bloku,
+    \item neprimy odkaz 2. urovne - pri 4 KiB clusteru je to $1024^2$ odkazu = stejny pocet datovych bloku,
+    \item neprimy odkaz 3. urovne - pri 4 KiB clusteru je tam $1024^3$ odkazu = stejny pocet datovych bloku \\
+\end{itemize}
+
+\subsubsection{Limit maximalni velikosti souboru}
+
+Poctem primych odkazu neprimeho odkazu 3. urovne je dan maximalni pocet bloku, ktere je mozne v tomto souborovem systemu ulozit. Teoreticky limit velikosti souboru je tak:
+$$10 * D + N * D + N^2 * D + N^3 * D$$
+kde $D$ je velikost bloku v bajtech (bezne 4096B), $M$ je velikost odkazu na blok v bajtech (bezne 4B), $N = D/M$, je pocet odkazu v bloku. \\
+
+Toto omezeni velikosti je pouze jednim z omezenim, ktere velikosti souboru omezuji. \textbf{Dalsi omezeni jsou dana:}
+\begin{itemize}
+    \item dalsimi datovymi strukturami a typy, ktere pouziva FS (napr. datovy typ delky souboru v bajtech v i-uzlu),  
+    \item strukturami VFS (veskera prace s jakymkoli filesystemem musi projit pres VFS),
+    \item rozhranim jadra,
+    \item architekturou systemu (32b - velikost souboru bude 32b cislo + MSB je pouzit pro indikaci chyby [-1 bit pro data] - soubory maximalne do 2 GiB nebo dnes bezna architektura 64b - 64b velikosti) \\
+\end{itemize}
+
+\textbf{Existuje Large File System Support}, kde ve 32b systemu se nahradi vsechny udaje kde se pracuje s velikosti vetsim datovym typem - podpora souboru \textit{vetsich jak 2 GiB}. \\
+
+\textbf{linux:} \\[0.5em]
+\textit{du [soubor]} vypise zabrane misto v blocich vc. rezie (metadat) \\[0.2em]
+\textit{ls -l [soubor]} vypise velikost souboru v bajtech (pouze uzitecna data) \\[0.2em]
+\textit{df} vypise volne misto na discich \\[0.2em]
+\textit{ls -i [soubor]} zpristupni cislo i-uzlu souboru \\[0.2em]
+\textit{is -e /dev/... n} - vypis i-uzlu n na /dev/... \\[0.2em]
+\textit{dumpe2fs} - zakladni informace o souborovem systemu ext2,3,4 \\[0.2em]
+\textit{/dev/zero} je soubor typu zarizeni generujici proud 0 \\[0.2em]
+\textit{dd if=[source] of=[dest]} je nizkourovnove kopirovani \\
+
+\newpage
+
+\subsubsection{Vyhody a nevyhody architektury FS}
+Neboli proc bylo navrzen FS prave tak, jak je. Architektura FS je totiz ovlivnena snahou o minimalizaci jejich rezie s relativne pomalymi disky (HDD, SDD), jedna se zejmena o bezne operace se soubory, jako je pruchod soubourem (otevru - prochazim od zacatku do konce) ci presun (seek), zvetsovani ci zmensovani (vc. mazani) souboru. \\
+
+\textbf{Je nutne vzit do uvahy, z jakych (mikro)operaci se tyto operace sestavaji}. Jsou to operace:
+\begin{itemize}
+    \item vyhledavani adresy prvniho nebo urciteho bloku souboru,
+    \item vyhledavani nasledujicich bloku,
+    \item pridani ci odebrani bloku,
+    \item alokace ci dealokace volneho souboru (informace o volnych oblastech, minimalizace externi fragmentace) \\
+\end{itemize}
+
+FS a jeho naslednici UFS, EXT2, EXT3 (EXT4 uz neni jeho naslednik!) predstavuji kompromis s ohledem prevazne na male soubory. (tyto fs funguji skvele pro male soubory - u vetsich souboru je nutne prochazet ci menit vetsi objem metadat) \\
+
+Jistou optimalizaci pouzivanou i u klasickych filesystemu pro male soubory je ulozeni dat primo do i-uzlu. (pokud se tam data vlezou). \\
+
+\textbf{definice:} \\[0.5em]
+\textit{symbolicky odkaz} je soubor odkazujici na jiny soubor (pouziva ulozeni dat primo do i-uzlu) \\[0.2em]
+\textit{rychle symlinky} maji data v i-uzlu \\[0.2em]
+\textit{pomale symlinky} maji data mimo i-uzel
+
+\newpage
+
+\subsection{Jine zpusoby organizace souboru}
+\subsubsection{Kontinualni ulozeni}
+\begin{itemize}
+    \item neboli spojite ulozeni souboru na disku,
+    \item na disku je jeden spojity usek dat reprezentujici soubor,
+    \item vyhodami jsou rychle vyhledani adresy 1./urciteho bloku nebo vyhledavani nasledujicich bloku,
+    \item nevyhody: soubory nebude mozne jednoduse zvetsovat pokud budou prilis blizko u sebe (bude nutne jej presunout na jine volne a vetsi misto, pokud to pujde ci provest defragmentaci a pote zvetsit soubor)
+    \item nepouziva se prilis (kvuli sve nevyhode) \\
+\end{itemize}
+
+\subsubsection{Zretezene seznamy alokacnich bloku}
+\begin{itemize}
+    \item kazdy alokacni blok obsahuje sva (uzitecna) data a na konci obsahuje odkaz na nasledujici alokacni blok,
+    \item kvyhodami jsou rychly pristup na zacatek ci pruchod daty,
+    \item knevyhodou je presun na nahodne misto v souboru - nutnost precist cely soubor az po dany blok (1 GiB soubor, chci posledni blok - musim precist cely),
+    \item kdalsi nevyhodou je rozprostreni metadat po celem disku - pri drobne chybe na disku prijdu o data (tedy i metadata, kde jsou odkazy na nasledujici bloky) a dojde k velke ztrate dat (vsechna data "za" ztracenymi daty jsou nepristupna),
+    \item kneni prilis vhodna, nicmene se pouziva v souborovych systemech FAT \\
+\end{itemize}
+
+\subsubsection{FAT}
+\begin{itemize}
+    \item File Allocation Table,
+    \item od zretezenych seznamu se lisi tim, ze seznamy popisujici rozlozeni souboru na disku jsou ulozeny v separatni oblasti na disku (tzv. FAT),
+    \item kde jsou tato data koncentrovana - rychleji se prohledavaji, lze vytvorit tak vice kopii FAT (prevence okamzite ztraty dat pri chybe),
+    \item stale vznikaji problemy s rychlosti pri nahodnem pristupu (stale jde o zretezeny seznam)
+    \item tabulka je pole, ktere obsahuje pro kazdy blok na disku 1 polozku, kazda polozka obsahuje odkaz na dalsi blok/polozku,
+    \item pouziva se i dodnes (a je to velmi rozsirene), protoze je to jednoduche (napr. vestavene systemy) \\
+\end{itemize}
+
+\newpage
+
+\subsubsection{B+ stromy}
+\begin{itemize}
+    \item jsou datovou strukturou prevzatou z databazovych systemu,
+    \item maji dva typy uzlu - vnitrni a listove,
+    \item vnitrni uzly jsou koren, jeho naslednici krome listovych, obsahuji odkaz na naslednika a vyhledavaci klic,
+    \item listove uzly take obsahuji odkazy a vyhledavaci klice, odkazy vedou na data na disku, posledni odkaz na poslednim listu odkazuje na list na stejne urovni (jsou tak propojeny linearnim seznamem),
+    \item pouzivaji se za ucelem popisu rozlozeni dat na disku (obsah souboru, pote vyhledavaci klic bude offset - cislo logickeho bloku v ramci souboru) nebo se pouzivaji pro adresare (klice budou jmena souboru) nebo pro popis celeho obsahu disku (klic je dvojice i-uzel a posuv souboru) \\
+\end{itemize}
+
+\textbf{Vyhledavani v B+ stromu:}
+\begin{itemize}
+    \item pri hledani klice (k) se podivam, zda je klic mensi jak klic k0, pokud ano, pujdu nize, kde je k00, pokud ne, zjistim, jestli je klic mezi k0 a k1, pokud ano, jdu druhym smerem, opakuji po kn,
+    \item pokud jsem niz, opakuji to same co vys az nedojdu k listovym uzlum,
+    \item zde hledany klic najdu nebo zjistim ze v teto strukture klic neni
+    \item pote mam odkaz na datovy blok,
+    \item v pripade ze chci cist dal, tak jdu linearne po sobe po nasledujicich listovych uzlech \\
+\end{itemize}
+
+\begin{figure}[htb]
+    \centering
+    \scalebox{2}{\includegraphics{6.3.4.jpg}}
+    \caption{z prezentace IOS: Souborove systemy, slide 27 - B+ strom}
+\end{figure}
+
+\newpage
+
+\textbf{Prace s B+ stromy:}
+\begin{itemize}
+    \item jsou zde limity jak moc/malo maji byt uzly zaplneny (strom se udrzuje vyvazeny) - pro uzly s $m$ odkazy mame klice $0, 1$, .. az $m - 2$ klicu (odkazu je o 1 mene nez klicu + cislovani od 0), 
+    \item pokud je strom tvoren solo korenem - nejmene muze mit $1$ odkaz, maximalne $m - 1$ odkazu (posledni odkaz je pouzit jako ukoncovac seznamu listu),
+    \item pokud to neni solo koren, tak ma nejake nasledniky, minimalne jich ma tak $2$, maximalne $m$,
+    \item vnitrni uzel ma tak $\frac{m}{2}$ (zaokr. nahoru) az $m$ odkazu, list $\frac{m}{2} - 1$ (opet $\frac{m}{2}$ zaokr. nahoru) az $m - 1$ odkazu,
+    \item vlozeni:
+    \begin{itemize}
+        \item nejprve projdeme stromem od korene k listum,
+        \item najdeme kam chceme vlozit,
+        \item podivame se, zda ma list volny odkaz,
+        \item pokud ano - pouzijeme ho, pokud ne - list se rozstepi na 2 poloviny a podivam se o uroven vys, zda je mozne namisto 1 listu linkovat 2 listy,
+        \item pokud ano - prida se odkaz, pokud ne - nadrazeny uzel se musi rozstepit a postupovat o uroven vys,
+        \item ... stepi se strom az pripadne se rozstepi koren a strom bude mit 2 koreny
+    \end{itemize}
+    \item ruseni:
+    \begin{itemize}
+        \item se opet od listove urovne, tak, ze se zrusi odkaz v listu,
+        \item zkontroluje se, zda je uzel zaplneny v ramci danych limitu,
+        \item pokud ano - gut, pokud ne - podivam se na sousedni uzly a pokud se provest prerozdeleni tak, aby byly vsechny uzly naplneny v ramci limitu,
+        \item pokud se to nepodari, tak dojde ke slouceni listu,
+        \item posunu se o uroven vys, zrusim jeden odkaz, zkontroluji opet limity, zopakuji to same,
+        \item ... az se muze stat, ze se zrusi i koren \\
+    \end{itemize}
+\end{itemize}
+
+B+ stromy a jeho varianty jsou pouzivany pro popis diskoveho prostoru v filesystemech jako
+XFS, JFS, ZFS, Btrfs, ReFS, ..
+v omezene podobe tzv. stromu extentu v EXT4, podobna struktura je i v NTFS \\
+
+\textbf{definice:} \\[0.5em]
+\textit{solo koren} = jediny koren
+
+\newpage
+
+\subsubsection{Extent}
+\begin{itemize}
+    \item pouziva se ke zrychleni prace s velkymi soubory,
+    \item umoznuji zmensit objem metadat (je mozne rict, ze nektere alokacni bloky jsou ulozeny pospolu = vytvari extent), potom budu popisovat rozlozeni souboru po extentech (ne po alokacnich blocich),
+    \item prinese lepe vyvazene indexove struktury,
+    \item rychlejsi mazani,
+    \item jsou pouzity snad ve vsech systemech s B+ stromy,
+    \item B+ strom se snadno kombinuje s extenty (neplati pro klacicky Unixovy strom - protoze ve stromu jsou explicitne ulozene vyhledavaci klice, ale Unixovy nema v zadnych strukturach [i-uzel] ulozenou velikost datovych bloku [protoze jsou vsechny stejne a konstantni]) \\
+\end{itemize}
+
+Pokud pouzivame B+ stromy, tak rychlemu spojitemu pruchodu pomaha listova uroven, pokud je prolinkovani listu pouzito. Pro male soubory muze predstavovat B+ strom zbytecnou rezii (data se bud ulozi primo v i-uzlu nebo nebo z nej mame prime odkazy na extenty z i-uzlu [do max. 4 extentu]) \\
+
+\textbf{definice:} \\[0.5em]
+\textit{extent} je jednotka vystavena na bloky, posloupnost promenneho poctu alokacnich bloku (jdoucich za sebou logicky v souboru i fyzicky na disku) \\
+
+\newpage
+
+\subsection{EXT4}
+Pouziva pro popis rozlozeni dat na disku strom extentu. Pro "male soubory" (mysleno soubory, na ktere je mozne se odkazovat az 4 extenty, pak tyto extenty budou odkazovane primo z i-uzlu; tldr soubory s malym poctem extentu) \\
+
+\textbf{definice:} \\[0.5em]
+\textit{strom extentu} je v principu B+ strom degradovany na maximalne 5 urovni, bez pouzivani vyvazovani (napr. prerozdelovani uzlu pri mazani) a zretezeni listu \\
+
+\subsection{NTFS}
+Zakladni datovou strukturou popisujici disk je MFT - Master File Table (ma pro kazdy soubor alespon 1 radek, na 0. radku popisuje samo sebe, 1. radek pripadne kopie MFT, pripadne metadata, pote obsahy souboru).  \\
+
+\textbf{Obsah souboru muze byt reprezentovan bud:}
+\begin{itemize}
+    \item pokud jde o kratky soubor, bude ulozen v MFT v jeho radku (vcetne metadat),
+    \item soubor je rozdelen na extenty (ty jsou odkazovane primo z radku souboru v MFT, tak ze v radce souboru jsou informace o pocatecnim VCN a LCN a pocet clustero, ktery dany extent obsahuje) - vyhledava se v tom stejne jako v B+ stromu
+    \item pokud je extentu potreba vice nez se vleze na jeden radek, alokuji se pomocne radky (z hlavniho radku vedou odkazy na pomocne, z pomocnych vedou odkazy na disk) - prochazeni je opet ve stylu B+ stromu \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{VCN} - virtual cluster number, logicky blok souboru \\[0.2em]
+\textit{LCN} - logical cluster number, cislo fyzickeho bloku (souvisi s tim ze je to na logickem disku) \\
+
+\subsection{Organizace volneho prostoru na disku}
+V klasickem Unixovem FS a rade jeho nasledovniku (UFS, EXT2, 3), take v NTFS se pouzivaji bitove mapy, kde pro kazdy blok mam 1 bit. V bitove je mozne pote vyhledavat pomoci bitovych mask - zrychli vyhledavani. \\
+
+\textbf{Dalsi mozne zpusoby organizace volneho prostoru:}
+\begin{itemize}
+    \item pouziji se alokacni seznamy (zretezeni volnych bloku na disku),
+    \item zretezeni volnych polozek v tabulce (FAT),
+    \item B+ strom (udrzovani informaci o tom, kde je volne misto, adresace velikosti a/nebo offsetem)
+    \item volny prostor muze byt take organizovan po extentech. \\
+\end{itemize}
+
+\newpage
+
+\subsection{Deduplikace}
+\begin{itemize}
+    \item podporovana ZFS, NTFS, Btrfs, XFS, (ext4 ne) ..
+    \item snazi se odhalit opakovane ukladani stejnych dat na disk a ulozi je pouze jednou a odkazuje se na ne vicenasobne.
+    \item systemy s deduplikaci se snazi takova data detekovan (sekvence bitu, bloku, extentu, ..)
+    \item zalozeno na kryptografickem hashovani (hledaji se data se stejnym popisem, urci se shoda),
+    \item muze byt realizovano pri zapisu nebo dodatecne (zadost uzivatele),
+    \item muze usporit diskovy prostor (pri virtualizaci, na mail serverech, repozitare, ..), pametovy prostor i cas (zamezi se opakovanemu cteni i zapisu),
+    \item pri mensim objemu duplikace muze naopak zvysit spotrebu CPU casu, spotrebu pametoveho i diskoveho prostoru \\
+\end{itemize}
+
+\textbf{Rozdil oproti copy-on-write:}
+\begin{itemize}
+    \item copy-on-write se muze uchytit (klony, snimky) pouze tehdy, pokud duplikaty vzniknou cinnosti samotneho filesystemu (napr. vytvoreni virtualek),
+    \item zatimco deduplikace aktivne vyhledava duplikaty (napr. uzivatel, co stahuje stejne reklamni letaky) \\
+\end{itemize}
+
+\subsection{Typy souboru v UNIXu}
+\begin{itemize}
+    \item - je obycejny soubor,
+    \item d adresar,
+    \item b blokovy specialni soubor,
+    \item c znakovy specialni soubor,
+    \item l symbolicky odkaz (symlink),
+    \item p pojmenovana roura,
+    \item s socket \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{specialni soubor} je typ souboru reprezentujici hardwarove zarizeni (disk, hw, pamet) se kterym se komunikuje po blocich nebo znacich \\[0.2em]
+\textit{symbolicky odkaz} je soubor obsahujici jmeno jineho souboru (odkazuje na nej) \\
+
+\newpage
+
+\subsection{Adresar}
+Je to kolecke jinych souboru na nejvyssi urovni abstrakce. Soubor obsahuje mnozinu dvojic jmeno a unikatni ciselne oznaceni. \\
+
+\textbf{Jmeno souboru:}
+\begin{itemize}
+    \item drive limit 14 znaku, dnes az 255 (na konci musi byt '\verb|\0|')
+    \item ve jmene nesmi byt / nebo '\verb|\0|' \\
+    \item lati ze kazdy adresar v POSIX systemu vzdy obsahuje minimalne 2 jmena: . (odkaz na sebe) a .. (odkaz na rodicovsky adresar)
+\end{itemize}
+
+\textbf{Cislo souboru:}
+\begin{itemize}
+    \item u klasickeho souboru unixu je to cislo i-uzlu,
+    \item v jinych pripadech to slouzi jako klic do dane vyhledavaci struktury (B+ strom)
+\end{itemize}
+
+\textbf{Implementace adresaru:}
+\begin{itemize}
+    \item pouzivaji se ruzne pristupy, lisi se jednoduchosti implementace ci rychlosti vyhledavani (vkladani),
+    \item seznam (obsah souboru bude tvorena seznamem),
+    \item B+ stromy (v NTFS, XFS, JFS, APFS nebo EXT3/4 - ty pouzivaji H-stromy: 1-2 urovne, bez vyvazovani a vyhledava se na zaklade zahashovaneho jmena)
+    \item hashovaci tabulky v napr. ZFS \\
+\end{itemize}
+
+Soubor v UNIXu muze mit vice jmen. Dalsi jmena se vytvari pomoci prikazu ln \\
+
+\textbf{linux:} \\[0.5em]
+\textit{ln [existujici jmeno] [nove jmeno]} vytvori dalsi jmeno souboru \\
+
+\newpage
+
+\subsection{Montovani disku}
+\textbf{Princip motnovani disku:}
+\begin{itemize}
+    \item v UNIXu neni zadne oznaceni disku (A:, C:, ..), ale mame jeden adresarovy "strom",
+    \item v systemu je jeden korenovy logicky disk,
+    \item dalsi logicke disky se pripojuji programem \textit{mount} do existujiciho adresaroveho stromu (korenovy adresar zarizeni se "slepi" s adresarem v mem stromu) \\
+\end{itemize}
+
+Pripojovaci volby se mohou zadavat rucne (v terminalu) nebo se mohou predpripravit do /etc/fstab. Soubor /etc/mtab obsahuje tabulku aktualne pripojenych disku. \\
+
+\textbf{Novejsi technologie umoznuji automaticke montovani nove pripojenych zarizeni:}
+\begin{itemize}
+    \item na linuxu bezne pracuje system udev, ktery
+    \item rozpozna, ze se pripojilo nove zarizeni,
+    \item vytvori odpovidajici soubor typu blokove zarizeni (/dev/..),
+    \item informuje o tom zbytek systemu pomoci sbernice D-Bus,
+    \item aplikace typu spravce souboru pak muze provest automaticke montovani (a dalsi akce),
+    \item prednost ma vzdy /etc/fstab,
+    \item identifikace se nemusi provadet jen zarizenim (/dev/..), je mozne si vygenerovat unikatni identifikator a pouzivat ten (UUID) \\
+\end{itemize}
+
+\textbf{Technologie Automounter:}
+\begin{itemize}
+    \item subsystem jadra,
+    \item pripojuje automaticky potrebne disky v situaci, kdy se pokusime pristoupit na pozici adresaroveho stromu, kam by takovyto disk mel byt pripojeny (napr. na /mnt ma byt pripojena flashka, nemusi byt mountla, uzivatel da cd /mnt, automounter to zjisti a pripoji flashku sem),
+    \item ma take nejaky cas, po kterem disk automaticky odpoji, pokud se nim nepracuje  \\
+\end{itemize}
+
+\textbf{Union mount:}
+\begin{itemize}
+    \item technologie umoznujici sjednocujici montovani (v unixu dostupna pomoci filesystemu UnionFS),
+    \item umoznuje do jednoho pripojneho bodu namontovat vice disku,
+    \item obsah pripojneho bodu je sjednocenim obsahu disku,
+    \item v pripade, ze na vice discich jsou soubory se stejnymi jmeny vznikaji kolize, ty se resi napr. preddefinovanim priorit pripojovanych filesystemu a zpristupni se soubor daneho jmena z logickeho disku, ktery ma nejvetsi prioritu
+    \item UnionFS ma copy-on-write semantiku, coz umoznuje emulaci prepisovani neprepisovatelnych medii (v 1 vetvi CD, neprepisovatelne, na tom je linuxova distribuce, soucasne se do stejneho bodu pripoji bezny disk s vyssi prioritou - na zacatku bude disk prazdny, budou videt vsechny soubory z CD, jakmile se pokusim prepsat neco, UnionFS vytvori kopii na prepisovatelny disk) \\
+\end{itemize}
+
+\textbf{linux:} \\[0.5em]
+\textit{mount [co-pripojit] [kam-pripojit]} pripoji logicky disk \\
+
+\newpage
+
+\section{}
+\textbf{Sedma prednaska:} Pokracovani Spravy souboru. Symbolicke odkazy, 
+\subsection{Symbolicke odkazy}
+TUDU
 
 \end{document}
