@@ -1,0 +1,973 @@
+\documentclass[a4paper, 11pt]{article}
+\usepackage[a4paper, text={17cm, 24cm}, left={2cm}, top={3cm}]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage[czech]{babel}
+\usepackage[hidelinks]{hyperref}
+
+\title{IOS - Operacni systemy}
+\date{}
+
+\begin{document}
+%%
+%%  TITULNI STRANA
+%%
+\begin{titlepage}
+
+\begin{center}
+\LARGE
+\textsc{\Huge Vysoke uceni technicke v Brne}\\
+\textsc{\huge Fakulta informacnich technologii}\\
+\vspace{\stretch{0.382}}
+IOS - Operacni systemy\\[0.4em]
+{\Huge poznamky z prednasek}
+\vspace{\stretch{0.618}}
+\end{center}
+{\Large 2019/2020 \hfill Corse \& US Layout}
+
+\end{titlepage}
+
+%%
+%% OBSAH
+%%
+
+\tableofcontents
+
+%%
+%%  TEXT
+%%
+
+\newpage
+
+\section{}
+\textbf{Prvni prednaska:} Uvod do predmetu, prehled operacnich systemu, zakladni pojmy, jadro operacniho systemu a jejich typy, historie vyvoje operacnich systemu, prehled technickeho vybaveni, klasifikace pocitacu, operacnich systemu, hlavni smery ve vyvoji operacniho systemu. \\
+\subsection{Uvod, prehled operacnich systemu}
+
+Operacni system je vyznamnou casti vypocetnich systemu, ty zahrnuji:
+\begin{itemize}
+    \item hardware, 
+    \item operacni system,
+    \item uzivatelske aplikacni programy,
+    \item uzivatele. \\
+\end{itemize}
+
+Prehled nekterych OS:
+\begin{itemize}
+    \item GNU/Linux 
+    \begin{itemize}
+        \item GNU/Debian - Ubuntu 
+        \item Red Hat - RHEL, Fedora, Cent OS 
+        \item SuSE 
+        \item Gentoo, Arch Linux, Slackware (= nejstarsi live distribuce linuxu) 
+    \end{itemize}
+    \item BSD 
+    \begin{itemize}
+        \item FreeBSD, OpenBSD 
+    \end{itemize}
+    \item GNU
+    \begin{itemize}
+        \item zn. GNU Is Not Unix
+    \end{itemize}
+    \item MS Windows 
+    \item Mac OS X
+    \begin{itemize}
+        \item jadro XNU = X is Not Unix
+    \end{itemize}
+    \item Android, iOS 
+    \item Minix
+    \begin{itemize}
+        \item pouziva intel ve svych cipech \\
+    \end{itemize}
+\end{itemize}
+\newpage
+
+\subsection{Zakladni pojmy}
+
+Operacni system je program (resp. kolekce programu), ktera vytvari spojujici mezivrstvu mezi hardware operacniho systemu  a uzivateli a jejich uziv. aplik. programy. OS dale spotrebovava zdroje, jako jsou pamet nebo cas CPU.
+(tldr: sw, spojujici hardware, uzivatele a programy) \\
+
+\noindent\textbf{Cile OS:}
+\begin{itemize}
+    \item maximalni vyuziti zdroju pocitace - drahe pocitace, levnejsi pracovni sila (drive)
+    \item jednoduchost pouziti pocitacu - levne pc, draha pracovni sila (dnes prevazuje) \\
+\end{itemize}
+
+\noindent\textbf{Zakladni role OS:}
+\begin{itemize}
+    \item spravce prostredku
+        \begin{itemize}
+            \item pamet, procesor, periferie
+             \item dovoluje sdilet prostredky efektivne a bezpecne
+        \end{itemize}
+    \item tvurce prostredi pro uzivatele a jejich aplikacni programy
+        \begin{itemize}
+            \item vytvareni abstrakci, virtualnich objektu (resp. poskytuje standardni rozhrani, ktere zjednodusuje prenositelnost aplikaci a zauceni uzivatelu)
+            \item abstrakce jsou napr.: proces, program, soubor
+            \item problemy abstrakci jsou mensi efektivita a nepristupne nektere nizkourovnove operace \\
+        \end{itemize}
+\end{itemize}
+
+\noindent\textbf{OS zahrnuje:}
+\begin{itemize}
+    \item jadro (kernel),
+    \item systemove knihovny a utility (= systemove aplikacni programy),
+    \item textove (shell) ci graficke uzivatelske rozhrani (X Window). \\
+\end{itemize}
+
+\noindent Presna definice, co vse OS zahrnuje neexistuje. Ruzne firmy a komunity to chapou ruzne. (GNU to chape napr. jako projekt svobodneho OS, zahrnujici jadro, utility, GUI, TUI, vyvojove prostredky a knihovny, ...) \\[1em]
+
+\noindent\textbf{definice:} \\[0.5em] \label{procesy} \label{soubory}
+\textit{proces} je aktivita rizena programem \\[0.2em]
+\textit{program} je predpis, navod na nejakou cinnost zakodovany vhodnym zpusobem \\[0.2em]
+\textit{soubor} je kolekce zaznamu (obvykle Byte) slouzici primarne jako zakladni jednotka pro ukladani dat na vnejsich pametovych mediich \\[0.2em]
+\textit{adresar} je kolekce souboru
+
+\newpage
+
+\subsection{Jadro operacniho systemu}
+
+Jedna se o nejnizsi a nejzakladnejsi cast OS. Zavadi se jako prvni a bezi po celou dobu behu pocitacoveho systemu (tzv. reaktivni system, spis nez transformacni). Navazuje primo na hardware (pripadne virtualizovany HW) a pro uzivatele a uziv. aplik. zcela zapouzdruje. \\
+
+\noindent\textbf{Bezi v privilegovanem rezimu:}
+\begin{itemize}
+    \item je mozne menit obsah registru hw, je mozne zadavat prikazy hw (neni mozne v uzivatelskem rezimu)
+    \item musi byt podporovano v hardware \\
+\end{itemize}
+
+\noindent\textbf{Jadro (obecne) zajistuje:}
+\begin{itemize}
+    \item zakladni spravu prostredku a tvorbu zakladniho prostredi jak pro uzivatele tak pro zbytek OS
+    \item zahrnuje vsechny operace, kdy je potreba primo komunikovat s hardware (prepinani kontextu - jadro, plaovani procesu - nekdy v jadru, nekdy mimo, zavedeni stranky z disku, ..)
+    \item sluzby pro zbytek OS a uzivatele, nektere zajistuje automaticky
+    \item nektere sluby nejsou poskytovany automaticky, musi si o ne zadat, nazyvame to volani sluzeb, tzv. \textit{system-call} \label{syscall} (= systemova volani), ktere musi byt implemenovana uzitim specializovanych instrukci (intel: sw preruseni, syscall, sysenter) \\
+\end{itemize}
+
+\noindent\textbf{Rozlisujeme dva typy rozhrani OS:} \label{kernel-interfaces}
+\begin{itemize}
+    \item \textit{kernel interface} (nebo taky: ABI, Kernel ABI) - prime volani jadra pomoci specializovanych instrukci
+    \item \textit{library interface} - rozhrani vyssi urovne (napr. C knihovny), typicke sluzby jsou napr. printf z C - volaji se funkce ze         systemovych knihoven, mohou ale nemusi vest na volani sluzeb jadra (bezne aplikace pracuji s timto rozhranim) \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{transformacni system} je system, ktery dostane nejaky vstup, zpracuje ho a udela nejaky vystup (prekladac) - pokud se zacykli = chyba \\[0.2em]
+\textit{reaktivni system} se spusti a do (teoreticky) nekonecna reaguje na podnety uzivatele (spust proces - spusti proces) - pokud prestane pracovat = chyba \\[0.2em]
+\textit{prepinani kontextu} je situace, kdy na CPU bezi proces, ten chci pozastavit a nechat bezet jiny proces \\[0.2em]
+\textit{instrukce syscall a sysenter} - jakmile aplikace (bezi v uziv. rezimu) zavola takovou instrukci, dojde ke kontrolovanemu prepnuti do rezimu jadra, provede se sluzba, a pote se prepne zpet \\[0.2em]
+\textit{ABI} = Application Binary Interface
+
+\newpage
+
+\subsection{Typy jader OS}
+
+\noindent\textbf{Monoliticka jadra}
+\begin{itemize}
+    \item vysokourovnove komplexni rozhrani s radou sluzeb, abstrakci, ktere mohou pouzivat vyssi vrstvy OS
+    \item vsechny subsystemy jsou implementovany v privilegovanem rezimu, rezimu jadra, a zahrnuji napr. spravu pameti, planovani, meziprocesovou komunikaci, souborove systemy, ..
+    \item vyhody: vysoka efektivita diky provazanosti
+    \item nevyhody: mala flexibilita pri praci s jadrem (ve filesystemu je chyba, chci zmenit jen implementaci filesystemu za novou verzi a vse ostatni nechat - nelze, je nutne cely system zastavit a znovu nastarovat, nelze menit nic za behu) \\
+\end{itemize}
+
+\noindent\textbf{Monoliticka jadra s modularni strukturou}
+\begin{itemize}
+    \item vylepseni koncepce monolitickych jader
+    \item umoznuje zavadet/odstranovat subsystemu jadra v podobe tzv. modulu za behu
+    \item vyhody: neni nutne cely system zastavovat a znovu bootovat pro vymenu jednoho modulu, vyssi bezpecnost - zavedou se jen moduly, ktere se budou pouzivat
+    \item pouzivane v napr. FreeBSD, Linux \\
+\end{itemize}
+
+\noindent\textbf{Mikrojadra}
+\begin{itemize}
+    \item snaha minimalizovat rozsah jadra a rozsah jeho sluzeb
+    \item nabizi jednoduche rozhrani, maly pocet abstrakci, sluzeb, typicky nabizi nejzakladnejsi spravu CPU. I/O zarizeni, pameti, ..
+    \item vetsina sluzeb nabizenych monolitickymi jadry (ovladace, vyznamne casti spravy pameti, planovani) je implemenovana mimo jadro v tzv. serverech (nebezi v privilegovanem rezimu).
+    \item vyhody: flexibilita (vice soucaasne bezicich implementaci ruznych sluzeb, dynamicke spousteni, zastavovani..), zabezpeceni (chyba v serveru / utok na ne neznamena ovladnuti celeho OS, ale jen daneho serveru)
+    \item nevyhody: vyrazne vyssi rezie \\
+\end{itemize}
+
+\noindent\textbf{Generace mikrojader}
+\begin{itemize}
+    \item 1. generace - napr. Mach
+    \item 2. generace - napr. L4, mensi rezie nez 1. gen
+    \item 3. generace - napr. seL4 nebo ProvenCore, duraz na zabezpeceni, navrh s ohledem na moznost formalni verifikace \\
+\end{itemize}
+
+\newpage
+
+\noindent\textbf{Hybridni jadra}
+\begin{itemize}
+    \item "neco mezi mikrojadry a monolitickymi jadry"
+    \item jadra zalozena na mikrojadrech, rozsirena o kod, ktery by mohl byt implementovan ve forme serveru, je ale za ucelem mensi rezie tesneji provazan s mikrojadrem a bezi v jeho rezimu
+    \item pouzivane v napr. Mac OS X (Mach + BSD), Windows NT (a vyssi), ... \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{servery (v oblasti mikrojader)} jsou procesy \\[0.2em]
+\textit{formalni verifikaci} rozumime overeni urcitych vlastnosti systemu s platnosti matematickeho dukazu \\[0.5em]
+
+\noindent\textbf{linux prikazy:} \\[0.5em]
+\textit{lsmod} - vypise aktualne zavedene moduly jadra \\[0.2em]
+\textit{rmmod} - maze moduly jadra \\[0.2em]
+\textit{modprobe} - zavadeni modulu do jadra \\[0.2em]
+
+\newpage
+
+\subsection{Historie vyvoje OS}
+
+\noindent\textbf{definice:} \\[0.5em] \label{hist-preruseni}
+\textit{preruseni} je elektricky signal, ktery jde od periferie po sbernici k procesoru, na CPU vyvola obsluhu preruseni - mechanismus umoznujici rozbehnout operaci na periferii a o tu periferii se nestarat (periferie pote oznami konec operace) (podrobne se tomu venuje oddil \ref{hw-preruseni}) \\[0.2em]
+\textit{multitasking} je soucasny beh vice aplikaci na jednom procesoru (muze byt s preemtivnim nebo nepreemtivnim planovanim) \\[0.2em]
+\textit{nepreemtivni planovani} zn. ze uloha, kt. aktualne bezi na CPU muze byt od CPU "odstavena" pouze tehdy, kdyz nejak zakomunikuje s jadrem (= pozada o sluzbu jadra, napr. periferni operace), dokonce lze pouzit specializovane sluzby pro prepnuti kontextu (proces se dobrovolne vzda CPU, tzv. yield sluzby) - vyhoda: snadna implementace, nevyhoda: pokud se proces zacykli (chyba), cely system se zablokuje (porad bezi 1 uloha) \\[0.2em]
+\textit{preemtivni planovani} - proces muze byt odstaven od CPU bez nutnosti komunikace s jadrem, napr. pomoci preruseni (jakehokoli typu) \\[1em]
+
+\subsection{Prehled technickeho vybaveni}
+
+\noindent\textbf{Procesor (CPU):}
+\begin{itemize}
+    \item radic, ALU, registry (IP, SP), instrukce, .. \\
+\end{itemize}
+
+\noindent\textbf{Pamet:} \label{hiearchie-pameti}
+\begin{itemize}
+    \item adresa
+    \item hiearchie pameti (cache, RAM, disky, ... - bank pameti muze byt vice)
+    \begin{itemize}
+        \item pameti se lisi spotrebou, kapacitou, rychlosti, cenou za jednotku
+        \item na vrcholu hiearchie jsou registry (nejrychlejsi, nejvyssi cena za jednotku, mala kapacita)
+        \item cache (vyrovnavaci pameti, ruznych urovni, L1 = level 1, L2, L3, ..)
+        \item primarni pamet RAM
+        \item sekundarni pameti - disky (SSD, HDD)
+        \item vyrovnavaci pameti disku
+        \item tercialni pameti (zalohy - nejnizsi cena za jednotku, nejpomalejsi, nejvetsi kapacita - pasky, CD/DVD, externi disky, cloudy, sitove disky, ..) \\
+    \end{itemize}
+\end{itemize}
+
+\noindent\textbf{Periferie:}
+\begin{itemize}
+    \item disk (HDD, SDD,..), klavesnice, monitor (I/O porty, preruseni, DMA) \\
+\end{itemize}
+
+\noindent\textbf{Sbernice:}
+\begin{itemize}
+    \item propojuji jednotlive komponenty
+    \item na vrcholu hiearchie jsou sbernice propojujici CPU a pamet (FSB - Front Side Bus, HyperTransport QPI - Quick Path Interconnect)
+    \item diskove sbernice (SATA/ATA, SCSI/SAS, USB)
+    \item dalsi sbernice (NVLink - pripojovani nVidia GPU, PCI - rozsirujici karty ci disky, CAPI - IBM Tauer CPU, propojovani CPU a akceleratoru) \\
+\end{itemize}
+ 
+\noindent\textbf{definice:} \\[0.5em] \label{i-o}
+\textit{I/O porty} = vstup-vystupni porty, predstavuji pametove oddeleny prostor od adresoveho prostoru bezne pameti, s temito adresami se komunikuje specialnimi instrukcemi (intel: inout) \\[0.2em]
+\textit{pametove mapovane I/O} je cast adresoveho prostoru bezne pameti neni pouzita pro praci s pameti, ale adresy jsou presmerovane do HW (neco co zapisu na danou adresu nebude v pameti ale v nejakem registru HW) \\[0.2em]
+\textit{DMA} zn. Direct Memory Access, souvisi s nezavislou cinnosti periferii - periferie mohou primo komunikovat s hardware (radic disku si sam z adresy pameti nacte data a pres sbernice je prenasi na disk, nebo naopak) \\[0.2em]
+
+\subsection{Klasifikace pocitacu}
+
+\noindent\textbf{Dle ucelu:}
+\begin{itemize}
+    \item univerzalni,
+    \item specializovane
+    \begin{itemize}
+        \item vestavene (palubni pc, spotrebni elektronika, ..)
+        \item aplikacne orientovane (rizeni db, sitove servery, ..)
+        \item vyvojove (zkouseni novych technologii) \\
+    \end{itemize}
+\end{itemize}
+
+\noindent\textbf{Podle vykonnosti:}
+\begin{itemize}
+    \item vestavene pc, tablety, mobily, ..
+    \item osobni pocitace (PC) a pracovni stanice (workstation) - dnes se nerozlisuje
+    \item servery
+    \item strediskove pocitace (mainframe) - vyrabi IBM, ladene na obrovsky I/O vykon a vysokou spolehlivost
+    \item superpocitace - ladene na surovy vypocetni vykon (vedecke vypocty, simulace) \\
+\end{itemize}
+
+\newpage
+
+\subsection{Klasifikace OS}
+
+\noindent\textbf{Podle ucelu:}
+\begin{itemize}
+    \item univerzalni (UNIX, Linux, Windows, ..)
+    \item specializovane (real-time - RT-Linux, databaze, web - z/VSE, mobilni - iOS, Android) \\
+\end{itemize}
+
+\noindent\textbf{Podle poctu uzivatelu:}
+\begin{itemize}
+    \item jednouzivatelske (CP/M, MS-DOS,..)
+    \item viceuzivatelske (UNIX, Windows, ..) \\
+\end{itemize}
+
+\noindent\textbf{Podle poctu soucasne bezicich uloh:}
+\begin{itemize}
+    \item jednoulohove
+    \item viceulohove (multitasking, ne/preemptivni) \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{soft real-time} - doporuceni aby se akce vykonavaly v realnem case \\[0.2em]
+\textit{hard real-time} - akce se musi vykonavat v urcitem case \\[1em]
+
+\subsection{Implementace OS}
+
+OS se obtizne programuji a ladi, protoze to jsou velke programove systemy, paralelni a asynchronni systemy, systemy zavisle na technickem vybaveni. \\
+
+\noindent\textbf{Dusledky:}
+\begin{itemize}
+    \item setrvacnost pri implementaci (snaha nemenit kod, ktery pracuje spolehlive)
+    \item pouzivani technik pro minimalizaci vyskytu chyb (inspekce zdrojoveho kodu, rozsahle testovani, podpora vyvoje technik formalni verifikace) \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{paralelni system} zn. ze zde bezi vice aktivit soucasne \\[0.2em]
+\textit{paralelni asynchronni systemy} - procesy se prepinaji v okamzicich, ktere nelze dopredu presne predpovedet \\[1em]
+
+\newpage
+
+\subsection{Hlavni smery ve vyvoji OS}
+\begin{itemize}
+    \item neustale vylepsovani architektur (snizovani rezii jader,)
+    \item bezpecnost, spolehlivost
+    \item podpora stale vetsiho poctu procesoru, vice jader
+    \item virtualizace
+    \item distribuovane zpracovani (cloudy, kontejnery, Internet of Things)
+    \item OS tabletu, mobilu, vestavenych systemu, ...
+    \item vyvoj novych technik navrhu a implementace OS (podpora formalni verifikace) \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{bezpecnost} zn., ze system je odolny vuci vnejsim utokum \\[0.2em]
+\textit{spolehlivost} zn., ze system "nespadne sam od sebe"
+
+
+
+
+%%
+%% 2
+%%
+\newpage
+
+\section{}
+\textbf{Druha prednaska:} Unix - uvod: historie UNIXu (nezkousi se), priciny uspechu UNIXu, varianty UNIXu, zakladni koncepty, struktura jadra, komunikace s jadrem - hardwarova preruseni. Prehled programovani v UNIXu: nastroje programatora, ..
+
+
+\subsection{Priciny uspechu UNIXu}
+\begin{itemize}
+    \item viceprocesovy, viceuzivatelsky,
+    \item napsan v C - prenositelny,
+    \item zpocatku (a pozdeji) siren ve zdrojovem tvaru,
+    \item "mechanism, not policy",
+    \item "fun to hack",
+    \item jednoduche uzivatelske rozhrani (terminal),
+    \item skladani slozitejsich programu z jednodussich (tvoreni aplikaci typu filtr),
+    \item hierarchicky system souboru,
+    \item konzistentni rozhrani perifernich zarizeni \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{"mechanism, not policy"} zn. snaha oddelit casti aplikaci (napr. GUI - oddelit zakladni rutiny pro vykreslovani grafiky od politik, tzn. koncove nastavby - barvy oken, umisteni tlacitek, .. - systematicke rozdeleni vede k lepsim optimalizacim a ladenim algoritmu a zaroven rychlym zmenam politik) \\[0.2em]
+\textit{"fun to hack"} zn., lide se na vyvoji podili, protoze je to bavi (nejen protoze jsou za to placeni) \\[0.2em]
+\textit{aplikace typu filtr} - jednoduche otevrene aplikace, na vstupu maji textovy dokument v otevrene podobe, vstup zpracuji a na vystupu opet otevreny dokument (zadne binarni, zakodovane) \\[1em]
+
+\newpage
+
+\subsection{Varianty UNIXu}
+\textbf{Hlavni vetve OS UNIXoveho typu:}
+\begin{itemize}
+    \item UNIX System V (puvodni system z AT\&T),
+    \item BSD UNIX (FreeBSD, NetBSD, ..),
+    \item firemni varianty (AIX, Solaris, ..)
+    \item Linux \\
+\end{itemize}
+
+\noindent\textbf{Sousisejici normy:}
+\begin{itemize}
+    \item XPG - X/OPEN, SVR4 - AT\&T,SUN, OSF/1, Single UNIX Specification,
+    \item POSIX - IEEE standard,
+    \item Single UNIX Specification v3/v4 - shell, utility (CLI), API \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{POSIX} je striktni podmnozina Single UNIX Specification, je to standard definujici zakladni textove prikazove rozhrani OS + API \\[1em]
+
+\subsection{Zakladni koncepty}
+Jsou dve zakladni koncepce (abstrakce) UNIXu: \textbf{procesy} a \textbf{soubory}. \\
+
+\noindent Procesy mezi sebou komunikuji pomoci ruznych mechanismu meziprocesove komunikace - IPC (Inter-Process Communication) - roury, signaly, semafory, sdilena pamet, sockets, zpravy, streams, .. a pro komunikaci pouzivaji nejake I/O rozhrani (read, write, close, ..) \\
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{procesy} jsou abstrakci probihajici nejake aktivity (viz \ref{procesy})\\[0.2em]
+\textit{soubory} jsou abstrakci dat (viz \ref{soubory}) \\[1em]
+
+\newpage
+
+\subsection{Struktura jadra UNIXu}
+Zakladni podsystemy jsou sprava souboru a sprava procesu. \\
+\textbf{Popis:}
+\begin{itemize}
+    \item Na hornim okraji jadra (smerem k uzivatelum, aplikacim) je vrstva implementujici rozhrani volani sluzeb, prostrednictvim ktere jadro prebira zadosti o sluzby od aplikaci. Rozhrani kontroluje zda ten, kdo o sluzbu zada ji muze volat, zda jsou parametry validni a rozhrani predava pozadavek dal do jadra.
+    \item Aplikace mohou s jadrem komunikovat primo, nicmene nejcasteji komunikuji s jadrem pres knihovny. (viz. \ref{kernel-interfaces})
+    \item Na druhem okraji (tesne nad HW) je vrstva abstrakce hadrware.
+    \item Mezi spravou souboru a hardware se nachazi ovladace, pote vrstva vyrovnavacich pameti, ktere souborove systemy pouzivaji ke zrychleni prace s relativne pomalymi disky (HDD, SSD - oproti RAM pomale) - OS se snazi vyhnout opakovanemu cteni stejnych dat, proto si v jednom okamziku nacte vic dat nez uzivatel zada, ulozi si data do vyrovnavaci pameti (pri dostatku pameti) a data nacita odtud. (napr. C knihovny jsou pouzivane kazdym druhym programem - jsou v pameti temer porad). \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em] \label{ovladace}
+\textit{ovladace} jsou programy slouzici k rizeni (zadavani prikazu, prebirani stavovych informaci, reseni mimoradnych stavu konkretnich periferii) - lze je (jako i prislusna zarizeni) rozdelit na znakova a blokova (kratsi definice viz \ref{ovladac}) \\[0.2em]
+\textit{znakova zarizeni} jsou zarizeni komunikujici po jednotlivych znacich (klavesnice) \\[0.2em]
+\textit{blokova zarizeni} komunikuji po blocich (disk - sektory, resp. bloky) \\[0.2em]
+\textit{komunikaci s jadrem} rozumime nastavovani parametru hardware, vydavani prikazu hw, obsluhu ruznych stavu do kterych se hw dostava (a o kterych je CPU a jadro informovano prostrednictvim preruseni) \\[0.2em]
+\textit{nastavovani parametru hw} se deje pomoci I/O portu nebo pametove mapovanych operaci (viz \ref{i-o}) \\[0.2em]
+
+\newpage
+
+\subsection{Komunikace s jadrem a hardwarova preruseni} \label{hw-preruseni}
+Sluzby jadra jsou operace, jejich realizace je pro procesy zajistovana jadrem. Explictne je mozne o provedeni urcite sluzby zadat prostrednictvim system call (viz \ref{syscall}). \\
+
+\noindent\textbf{Priklady nekterych sluzeb jadra (systemova volani v UNIXu):}
+\begin{itemize}
+    \item open, close, read - otevre/zavre/cte soubor,
+    \item write - zapisuje,
+    \item kill - posle signal,
+    \item fork - duplikuje proces,
+    \item exec - prepise kod,
+    \item exit - ukonci proces. \\
+\end{itemize}
+
+\subsubsection{Hardwarove preruseni}
+\begin{itemize}
+    \item hardware interrupt je mechanismus, kterym HW zarizeni oznamuji jadru asynchronne vznik udalosti, ktere je zapotrebi obslouzit (dalsi mozna definice viz \ref{hist-preruseni}),
+    \item zadosti o HW preruseni prichazi jako elektricke signaly (IRQ) do radice preruseni (APIC),
+    \item procesor s radicem preruseni komunikuje pomoci I/O portu. \\
+\end{itemize}
+
+\noindent\textbf{Prijem nebo obsluju HW preruseni lze zakazat:}
+\begin{itemize}
+    \item maskovanim preruseni, 
+    \item na CPU (instrukce CLI/STI na Intel/AMD - zakazou se vsechna krome NMI),
+    \item ciste programve v jadre (preruseni se prijme, ale jadro si jen poznamena jeho prichod a neobsluhuje se) \\
+\end{itemize}
+
+\noindent\textbf{NMI:}
+\begin{itemize}
+    \item non-maskable interrupt je HW preruseni, ktere nelze zamaskovat na radici ani zakazat na CPU,
+    \item pouziva se pri kritickych chybach pameti, sbernice, .. (alternativne se pouziva pro ladeni / reseni uvaznuti v jadre "NMI watchdog") \\
+\end{itemize}
+
+\noindent\textbf{Preruseni mohou vznikat i v CPU - jsou to synchronni preruseni, tzv. vyjimky (= exceptions):}
+\begin{itemize}
+    \item trap - po obsluze se pokracuje dalsi intrukci (breakpoint, overflow, ..)
+    \item fault - po obsluze se znovu opakuje intrukce, ktera vyjimku vyvolala (vypadek stranky, deleni 0, ..)
+    \item abort - dochazi k zavaznym problemum detekovanym CPU, neni jasne jak pokracovat - provedeni se ukonci (zanorene vyjimky typu fault, chyby HW detekovane CPU) \\
+\end{itemize}
+
+\textbf{Mohou existovat i dalsi typy preruseni:} (tato preruseni obsluhuje CPU zcela specifickym zpusobem (casto mimo vliv jadra, napr. na Intel/AMD))
+\begin{itemize}
+    \item Interprocessor interrupt (IPI)
+    \begin{itemize}
+        \item meziprocesorove preruseni
+        \item pouziva se pro preposilani preruseni z jednoho CPU na druhy nebo pro spravu cache (kazdy CPU ma svoji cache, do nich mohou mit CPU nacteny stejne adresy z pameti - pokud dojde ke zmenam v pameti, musi CPU informovat ostatni CPU o zmene)
+    \end{itemize}
+    \item System management Interrput (SMI)
+    \begin{itemize}
+        \item preruseni typu sprava systemu
+        \item muze byt vyvolano HW i SW ve zvlastnich situacich
+        \item pokud se takove preruseni vyvola, tak se dostane ke slovu firmware, ktery provadi obsluhu ruznych chybovych stavu (prehrati, vybita baterie, ..)
+        \item v ramci SMI nebezi bezne aplikace ani jadro, nesmi obsluha SMI bezet prilis dlouho (system se muze dostat do nekonzistentniho stavu) \\
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Zakazovani preruseni}
+\textbf{Proc preruseni zakazovat?}
+\begin{itemize}
+    \item v ramci obsluhy jednoho preruseni muze nastat dalsi preruseni,
+    \item napr. na CPU bezi vypocet, neco nastane na disku, disk posle preruseni, to dojde k CPU a jadro zacne preruseni obsluhovat, v ten moment se neco stane na klavesnici a prijde dalsi preruseni,
+    \item pote dale v ramci obsluhy muze jadro upravovat ruzne sve interni struktury, ktere mohou byt v nekonzistentnim stavu (napr. zretezene seznamy procesu [ukazatele], ruzne si je projuje, nez je stihne propojit, prije dalsi proces a muze sahnout do pameti kam nema),
+    \item proto obsluha preruseni musi byt synchronizovana a v pripade, ze se v ramci preruseni provadi nejaka kriticka operace je nutne vyloucit ostatni (vsechna) preruseni \\
+\end{itemize}
+
+\newpage
+
+\subsubsection{Pristupy k zakazovani preruseni}
+
+Pokud vsak zakazu (nejaka/vsechna) preruseni, abych se mohl venovat obsluze jednoho a budu ho obsluhovat prilis dlouho, system se muze dostat do nekonzistentniho stavu (jako u SMI). Pouzivaji se proto dva pristupy:
+\begin{itemize}
+    \item je snaha zakazovat jen preruseni s nizsimi prioritami,
+    \item rozdelit obsluhu preruseni do vice casti (urovni).
+\end{itemize}
+
+\noindent\textbf{Obsluha preruseni je casto delena na dve urovne:}
+\begin{itemize}
+    \item 1. uroven:
+    \begin{itemize}
+        \item ma byt co nejkratsi,
+        \item v ramci obsluhy preruseni se zakomunikuje nezbytnym zpusobem s HW (prevzani dat z/do HW, vydani prikazu HW, ..) a naplanuje se beh 2. urovne,
+        \item nelze pouzit bezne synchronizacni prostredky (protoze napr. CPU bezi nejaky vypocet, prijde preruseni z disku, jadro zacne resit 1. uroven obsluhy, nicmene obsluha != proces)
+    \end{itemize}
+    \item 2. uroven:
+    \begin{itemize}
+        \item dokoncuje obsluhu preruseni,
+        \item provadi se operace, kdy neni potreba komunikovat s hardware,
+        \item nemusi se zakazovat preruseni,
+        \item muze bezet v specialnich procesech (interrup threads ve FreeBSD nebo tasklety/softIRQ v Linuxu),
+        \item mohou se pouzit bezne synchronizacni prostredky \\
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Ovladace zarizeni a preruseni}
+\begin{itemize}
+    \item pri inicializaci ovladace (v Linuxu je to typicky modul) nebo pri jeho prvnim pouziti se musi registrovat k obsluze urciteho IRQ,
+    \item bud u nekterych zarizeni se pouzivaji (historicky) zafixovana cisla preruseni,
+    \item nebo ovladac muze zjistit cislo preruseni tak, ze zakomunikuje s radicem sbernic, pokud to nefunguje,
+    \item ovladac vyda prikaz zarizeni, ktere ma ovladat, aby zacalo vysilat nejaka preruseni (a "poslouchala" sbernici, "kdo se ozve"),
+    \item pote se zaregistruje k obsluze prislusneho preruseni a hardware se pres tabulku preruseni ovladac "dostane ke slovu",
+    \item vice zarizeni vsak muze pouzivat stejne cislo zadosti o preruseni
+    \begin{itemize}
+        \item v takovem pripade jadro vytvori zretezeny seznam ovladacu, ktere maji zajem o dane preruseni
+        \item ovladace musi byt napsane tak, ze pokud jim dojde preruseni (o ktere maji zajem), tak musi zakomunikovat s tim zarizenim a zeptat se ho, zda opravdu to zarizeni poslalo dane preruseni
+        \item pokud ano - obslouzi se, pokud ne - preda se rizeni preruseni dalsimu ovladaci v seznamu \\
+    \end{itemize}
+\end{itemize}
+
+
+\subsubsection{Priklad komunikace s jadrem} \label{pristup-na-disk}
+Synchronni komunikace je proces-jadro, asynchronni je hardware-jadro. Priklad (detailnejsi, ale na tema pristupy na disk viz \ref{pristup-na-disk-detailed}):
+\begin{itemize}
+    \item proces A zavola sluzbu read() a jadro ihned zacne volani obsluhovat (synchronni)
+    \item nejprve se podiva do cache zda data, o ktera ma zajem proces A uz tam nejsou
+    \item pokud ano, tak mu je rychle nakopiruje z cache na adresu, kterou pozaduje proces (bez komunikace s diskem)
+    \item pokud data nejsou v cache, proces A bude pozastaven a jadro vyda prostrednictvim ovladacu disku prikaz k nacteni urciteho objemu dat, typicky vice nez zada uzivatel a nacita do vyrovnavaci pameti (ne na pozadovanou adresu)
+    \item na procesoru dale bezi proces B, taky pozada o read(), zopakuje se to same co u A
+    \item az disk dokonci operace jednoho z procesu (nemusi byt v poradi volani), disk posle preruseni na CPU
+    \item jadro bude informovano, ze ma potrebna data pro proces A/B
+    \item z cache nakopiruje pozadovana data na pozadovanou adresu
+    \item pote se proces A/B probudi a bezi dal, to same se stane u dalsiho procesu \\
+\end{itemize}
+
+
+\noindent\textbf{definice (pro \ref{hw-preruseni}.x):} \\[0.5em]
+\textit{asynchronni} zn., bez prime-okamzite vazby na to co dela jadro nebo aplikace (tiskarna tiskne - operace nekdy skonci - ale nikdy nevim dopredu kdy presne) \\[0.2em]
+\textit{synchronni} zn., ze CPU neco provede a ihned se zavola preruseni (napr. deleni 0) \\[0.2em]
+\textit{IRQ} = interrupt request \\[0.2em]
+\textit{radic preruseni} = interrput controller, hardwarova jednotka, ktera predava preruseni do CPU - registruje prichozi IRQ, ty se dle priorit predavaji do CPU (preruseni je mozne take zamaskovat - nepredavat dal do CPU) v podobe cisla preruseni, CPU se automaticky prepne do chraneneho rezimu a spusti obsluznou rutinu definovanou jadrem (preruseni 1 - provede xxx, 2 - xxx, ..) \\[0.2em]
+\textit{APIC} = Advanced Programmable Interrupt Controller - distribuovany system, kazdy CPU ma lokalni APIC, externi zarizeni mohou byt pripojena primo / pres I/O APIC \\[0.2em]
+\textit{NMI watchdog} - jadro si nadefinuje, ze casovac mu kazdych n casovych jednotek posle toto preruseni - pokud dojde v jadre k uvaznuti pri obsluze jineho preruseni a vsechna preruseni budou zakazana, toto se vzdy dostane do CPU (jadro se muze zotavit) \\[0.2em]
+\textit{vypadek stranky} zn., (pamet je rozdelena na casti, ktere mohou byt rozdeleny na disk) kdyz proces bude sahat do pameti a sahne na stranku, ktera v ni neni - detekuje se ze stranka tam neni - poruseni ochrany pameti - jadro zkontruluje, zda proces nesaha kam by nemel, a pokud ne, tak mu stranku nahraje zpet do pameti a znovu se provede ta stejna instrukce \\[0.2em]
+\textit{bezne synchronizacni prostredky} jsou napr semafory nebo zamky a synchronizuji procesy \\[1em]
+
+\noindent\textbf{linux:} \\[0.5em]
+zakladni statistiky o obsluze preruseni jsou v \textit{/proc/interrupts}
+
+\subsection{Nastroje programatora UNIXu}
+X-Window system, vzdaleny pristup pres X-Window uzitecne prikazy na linuxu, ovladani vimu, apod. - vice viz. 2. prednaska IOS, u zkousky to nebyva.
+
+\section{}
+\subsection{Bash, shell, experimenty}
+\section{}
+\subsection{Bash, shell, experimenty}
+Treti a ctvrta prednaska je venovana hlavne shellu, prochazi se prakticky ruzne prikazy a provadi se experimenty, apod. - lepsi je shlednout + na zkousce nic takoveho nebyva.
+
+\newpage
+
+\section{}
+\textbf{Pata prednaska:} Sprava souboru: pevny disk, diskove sbernice, sektory, parametry pevnych disku, SSD, problematika zapisu SSD, zabezpeceni disku, diskova pole (RAID), ulozeni dat na disku, fragmentace, pristup na disk a jeho planovani, logicky disk.
+\subsection{Pevny disk}
+\textbf{Popis:}
+\begin{itemize}
+    \item uvnitr maji radu kulatych ploten, zaznam se provadi na kazdem z tech dvou povrchu, je v soustrednich kruznicich (= tracks, stopy)
+    \item vsechny plotny jsou na stejne ose, pridelane k sobe a rotuji soucasne
+    \item k nacitani slouzi sada hlavicek, cteci a zapisove, jsou tam v tolika kusech, kolik je tam povrchu (napr. 3 plotny = 6 povrchu = 6 hlavicek), vsechny umistene na jednom rameni, vsechny hlavicky se pohybuji soucasne
+    \item hlavicky jsou nastavene na sade nekolika stop (kruznic) o stejnem prumeru = cylindr,
+    \item stopy se deli na sektory
+    \item velikosti sektoru byly drive 512B, u CD/DVD 2048B, dnes 4096B \\
+\end{itemize}
+
+\noindent\textbf{Adresace sektoru:}
+\begin{itemize}
+    \item ze zacatku se pouzival CHS - urci se se kterym cylindrem chci pracovat, dale s kterou hlavou a jakym sektorem v ramci stopy,
+    \item v soucasne dobe se pouziva LBA, kde jsou sektory (bloky) cislovane (jako adresy v pameti) od 0 po n, diskova jednotka si musi tato cisla prevadet na CHS \\
+
+\end{itemize}
+
+\noindent\textbf{Periferni ci diskova rozhrani:}
+\begin{itemize}
+    \item pouzivaji se pro pripojeni disku,
+    \item nejbezneji se pouziva ATA, drive se pouzivala v paralelni verzi (PATA - jednotlive byty se posilaly paralelne, pri rostoucich rychlostech byl problem zajistit synchronizaci techto dat), nyni v seriove verzi (SATA)
+    \item take se pouziva SCSI ci SAS (Serial Attached Scasi), USB, FireWire, FibreChannel, Thunderbold, PCI Express nebo NVMe (pripojovani nejrychlejsich SSD),
+    \item nad temito rozhranimi muze byt dalsi HW rozhrani propojujici tyto sbernice, jako treba AHCI, OHCI, UHCI, .. \\
+\end{itemize}
+
+\newpage
+
+\noindent\textbf{Diskove sbernice se lisi:}
+\begin{itemize}
+    \item rychlosti (SATA do 6 Gbit/s, SAS 22.5 Gbit/s),
+    \item poctem pripojenych zarizeni (SATA desitky, 65535 SAS),
+    \item maximalni delkou kabelu (1-2m SATA, 10m SAS),
+    \item architekturou pripojeni (moznost pripojeni jednoho zarizeni vice cestami u SAS),
+    \item seznamem prikazu, ktere to zarizeni umi (flexibilita pri chybach, selhani, zotaveni, ..) \\
+\end{itemize}
+
+Pres diskove sbernice je mozne mit pripojene i jine typy pameti, jako jsou flash disky, SSD, pasky, CD/DVD/BD ci tercialni pameti. V systemu vznika hierarchie pameti, viz. \ref{hiearchie-pameti}. \\
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{cylindr} (v HDD) je mnozina stop o stejnem prumeru \\[0.2em]
+\textit{sektor} je nejmensi jednotka diskoveho prostoru, ktery mi umozni diskova elektronika nacist nebo zapsat \\[0.2em]
+\textit{blok} nebo \textit{diskovy blok} je sektor v HDD \\[0.2em]
+\textit{alokacni blok} nebo \textit{blok souboroveho systemu} je nejmensi jednotka, kterou umozni alokovat OS \\[0.2em]
+\textit{CHS} zn. Cylinder Head Sector  \\[0.2em]
+\textit{LBA} zn. Linear Block Adress \\[0.2em]
+
+\subsection{Parametry pevnych disku}
+Pristupova doba sestava z \textbf{doby vystaveni hlav} a \textbf{rotacniho zpozdeni}. \\
+
+\noindent Typicke parametry soucasnych disku jsou kapacita, prumerna doba pristupu (jednotky ms u HDD) , otacky a prenosova rychlost. U prenosovych rychlosti se rozlisuje \textit{sustained tranfer rate} a \textit{maximum transfer rate}. \\
+
+\noindent Mazani dat probiha tak, ze se prepisou metadata, pouze se poznamena (OS), ze dany soubor byl smazan. \\
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{doba vystaveni hlavicek} zn., ze pokud nejsou nastavene hlavicky na stope, se kterou chci pracovat (malokdy), tak je nutne pohnout hlavickami (vic zasunout dovnitr nebo vysunout) \\[0.2em]
+\textit{rotacni zpozdeni} je doba nez mi pod spravne nastavenou hlavicku najede sektor (narotuje se disk) \\[0.2em]
+\textit{maximum transfer rate} je spickova prenosova rychlost, jak maximalne rychle je schopen disk komunikovat po kratkou dobu (typicky rychlost predani dat z vyrovnavacich pameti disku) \\[0.2em]
+\textit{sustained transfer rate} opravdova rychlost cteni z ploten \\[0.2em]
+
+\noindent \textbf{linux:} \\[0.5em]
+\textit{hdparm [-t]} umoznuje zmerit prenosovou rychlost a menit parametry disku, -T meri rychost prenosu z vyrovnavaci pameti OS (RAM)
+
+\newpage
+
+\subsection{Solid State Drive - SSD}
+Mohou byt zalozena na ruznych technologiich, nejcasteji na nevolatilnich pametech NAND flash nebo DRAM (se zalohovanym napajenim) ci na kombinacich.
+
+\subsubsection{Klady a zapory SSD}
+
+\noindent \textbf{Vyhody:}
+\begin{itemize}
+    \item rychly (okamzity) nabeh,
+    \item nahodny pristup (mikrosekundy),
+    \item vetsi prenosove rychlosti (stovky MB/s, ATA do 600MB/s, 3.5GB/s s M.2, 7GB/s s PCI Express 4),
+    \item zapis muze byt mirne pomalejsi,
+    \item tichy provoz, lepsi mechanicka a magneticka odolnost,
+    \item obykle nizsi spotreba (neplati pro DRAM). \\
+\end{itemize}
+
+\noindent \textbf{Nevyhody:}
+\begin{itemize}
+    \item vyssi cena za jednotku prostoru,
+    \item omezeny pocet prepisu (nevyznamne pro bezny provoz),
+    \item vetsi riziko katastrofickeho selhani, 
+    \item mensi vydrz mimo provoz (pri vyplem napajeni a skladovani),
+    \item komplikace se zabezpecenim (bezpecne mazani nebo sifrovani prepisem dat - vyzaduje specialni pdporu). \\
+\end{itemize}
+
+\subsubsection{Problematika zapisu u SSD}
+NAND flash SSD jsou organizovany do stranek (typicky 4KiB) a ty jsou sdruzeny do bloku (typicky 128 stranek = 512 KiB). \\
+
+\noindent\textbf{Zapis nebo prepis dat:}
+\begin{itemize}
+    \item prazdne stranky lze zapisovat jednotlive (prepisovat ne!),
+    \item pokud chci prepisovat (jednu stranku), je nutne cely blok nacist do pameti, vymazat (zresetovat) a v pameti upraveny blok nacist zpet (= write emplification, zesileni zapisu - mnohonasobne zpomaleni),
+    \item problem je mensi pri sekvencnim (pockam az budu mit dost dat tak aby pokryly blok) nez pri nahodnem zapisu do souboru. \\
+\end{itemize}
+
+\noindent\textbf{Problem se sifrovanim a bezpecnym mazanim:}
+\begin{itemize}
+    \item diky tomu jak SSD prepisuji data se data nekolikrat presouvaji po disku,
+    \item proto disk musi poskytovat hw podporu pro bezpecne mazani nebo sifrovani. \\
+\end{itemize}
+
+\noindent\textbf{Reseni problemu prepisu u SSD:}
+\begin{itemize}
+    \item typicky ma SSD vice stranek-bloku nez je deklarovana kapacita (pri prepsani se zapise do volne stranky),
+    \item po smazani dostatku stranek (tak ze tvori blok) se blok zresetuje - prikazem TRIM souborovy system sdeli SSD, ktere stranky jiz nejsou pouzivane (a ktere bloky muze SSD smazat),
+    \item radic SSD muze stranky presouvat tak, aby si nektere bloky uvolnil (pokud je v bloku malo stranek, presunou se a blok se zresetuje),
+    \item TRIM nelze pouzit vzdy (typicky pokud v souborovem systemu mame obraz jineho souboroveho systemu, nemusi byt mozne sdelit zakladnimu filesystemu informace o praznych blocich, apod. nebo databaze, ktere si ukladaji data do velkeho predalokovaneho prostoru, ci obrazy virtulanich stroji a virtualni disky) \\
+\end{itemize}
+
+\noindent Radic SSD presouva i dlouho nezmenene stranky, aby minimalizoval pocet prepisu stranek. \\
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{nevolatilni} zn., ze pokud se vypne napajeni, tak obsah zustane zachovan (alespon po nejakou rozumnou dobu) \\[0.2em]
+\textit{stranka} je nejmensi jednotka dat, kterou lze do SSD zapsat \\
+
+\subsection{Zabezpeceni disku}
+Diskova elektronika typicky na ukladana data (sama o sobe) zabezpecuje kody, ktere umi pri naslednem cteni detekovat a pripadne opravit chyby - pouziva ECC. (detekce a oprava chyb je pouze v rezii disku, pokud disk detekuje chybu a neni prilis velka, chybu opravi a data ulozi na jiny sektor, poznaci si, ze ten sektor nema pouzivat) \\
+
+\noindent Existuje technologie, ktere umoznuji zjistit, v jakem stavu disk je (statistiky, premapovani, pocet chybnych sektoru, ..) - S.M.A.R.T (podporovana vsemi "rozumnymi" disky) \\
+
+\noindent Pak je mozne jeste provadet testovani na urovni OS, napr. e2fsck nebo badblocks nebo si nektere filesystemy (RFS, ZFS) provadeji kontinualni kontroly toho, co se ve filesystemu deje. Tyto utility nebo filesystemy mohou chyby detekovat (a varovat) nebo opravit (pokud neni chyba prilis velka) ci vyradit pouziti nekterych sektoru. \\
+
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{ECC} = Error Correction Code \\[0.2em]
+\textit{S.M.A.R.T} = Self Monitoring Analysis and Reporting Technology \\[0.2em]
+\textit{kontinualni kontroly (fs)} zn., ze si ukladaji sve dalsi kontrolni soucty, a pote si kontroluji pri praci se souborem, zda kontroly souhlasi \\
+
+\noindent\textbf{linux:} \\[0.5em]
+\textit{smartctl} je prikaz umoznujici vyuziti technologie S.M.A.R.T (testy disku, statistiky, ..) \\[0.2em]
+\textit{smartd} je nadstavbou smartctl (pravidelne spousteni testu, ..)
+
+\newpage
+
+\subsection{Diskova pole (RAID)} \label{RAIDs}
+RAID je technologie umoznujici z vetsiho poctu (levnejsich a ne prilis spolehlivych, vykonnych) disku vytvorit jeden disk, ktery je rychlejsi a spolehlivejsi. \\
+
+\noindent\textbf{Muze byt implementovan:}
+\begin{itemize}
+    \item hardwarove (do rozsirujici karty pripojime nekolik disku a ta implementuje RAID),
+    \item subsystemem v jadre,
+    \item nektere souborove systemy maji implementaci RAID v sobe.  \\
+\end{itemize}
+
+\noindent Ruznych typu RAID je nekolik (tzv. raid levels). \\
+
+\subsubsection{RAID 0}
+\begin{itemize}
+    \item data jsou rozlozena po dvou ci vice discich, ale kazdy datovy blok je ulozen jen na jednom disku (napr. dva disky, 0 a 1, prvni datovy blok [sektor, skupina sektoru] je na 0, druhy na 1, treti na 0, ...)
+    \item vyssi efektivita cteni ci zapisu,
+    \item je mozne paralelne cist ci zapisovat (do vice disku)
+    \item prudce snizuje spolehlivost - pokud selze jeden disk, prijdu o data na nem \\
+\end{itemize}
+
+\subsubsection{RAID 1}
+\begin{itemize}
+    \item disk mirroring, pro 2 a vice disku,
+    \item vsechny bloky dat se zapisuji na vsechny disky,
+    \item moznost cist a zapisovat paralelne,
+    \item vyssi spolehlivost (data jsou na vsech discich) \\
+\end{itemize}
+
+\subsubsection{RAID 2}
+\begin{itemize}
+    \item nejslozitejsi, proto se prilis nepouziva,
+    \item pouziva zabezpecovaci Hemingovy kody,
+    \item k urcitemu poctu datovych disku je urcity pocet zabezpecovacich disku,
+    \item data se ukladaji na datovych discich na urovni bytu, k nim se dopocitavaji zabezpecovaci kody (napr. 4 datove - 3 zabezpecovaci),
+    \item byty dat se rozlozi do vsech disku (ofc ty se musi prevest do bajtu a sektoru a zapisuje se to po sektorech)
+    \item jediny RAID, ktery umi detekovat chyby, nektere i sam opravit, dokonce umi i zjistit, ktery disk selhal \\
+\end{itemize}
+
+\newpage
+
+\subsubsection{RAID 3}
+\begin{itemize}
+    \item jednodussi zabezpeceni nez RAID 2, v podobe paritnich bytu,
+    \item rozklada data po bajtech ci skupinach bajtu, ktere zabezpecuje partinim zabezpecenim (napr. 4 disky - 3 datove a 1 paritni). \\
+\end{itemize}
+
+\subsubsection{RAID 4}
+\begin{itemize}
+    \item je analogie (tak jako RAID 3, akorat ..),
+    \item provadi se rozkladani na urovni bloku-sektoru,
+    \item nevyhoda u RAID 3 i 4 je pretizeni paritniho disku - pri zapisu/cteni se vzdy pracuje s paritnim diskem (a datovym) - na paritni disk se zapisuje tolikrat casteji, kolik mam datovych disku, tzn. vetsi pravdepodobnost selhani \\
+\end{itemize}
+
+\subsubsection{RAID 5}
+\begin{itemize}
+    \item prakticky se uz pouziva,
+    \item funkce paritniho disku neni vyhrazena pro jeden disk, ale mezi disky tzv. rotuje,
+    \item napr. v konfiguraci se 4 disky, prvni 3 datove bloky se ulozi na 3 disky, na poslednim bude parita, pro dalsi trojici se ulozi na 3. disk, pro dalsi na 2., dalsi na 1., a potom zase na posledni, apod. .. = rovnomerne zatizeni disku,
+    \item diky parite jsme schopni opet detekovat a korigovat chybu v jednom disku (pocet bitu neni sudy - chybi tam parity bit),
+    \item parita se pocita dle sektoru (prvni bit 1. sektoru, prvni 2. sektoru, ..),
+    \item pokud selze vice disku, nelze dopocitat bity (data) \\
+\end{itemize}
+
+\subsubsection{RAID 6}
+\begin{itemize}
+    \item parita se uklada 2x,
+    \item dokaze se vyrovnat se selhanim az 2 disku,
+    \item vetsi redudance dat (obetuji se 2 disky jako parita) \\
+\end{itemize}
+
+\noindent RAID je mozne vytvorit i na jednom fyzickem disku (na kterem jsou logicke disky).
+
+\newpage
+
+\subsection{Opravy chyb u paritnich disku}
+\begin{itemize}
+    \item paritni disky pouzivane u RAID 3 - 6,
+    \item jakmile clovek urci disk, ktery selhal, je mozne zreprodukovat jeho obsah,
+    \item priklad: 4 disky, 1 paritni, treti datovy selze
+    \begin{itemize}
+        \item prvni byty v datovych jsou 010 (potom v paritnim aby byl sudy pocet je 1), dalsi byty jsou 111 (licha parita, do paritniho disku se doplni 1 na sudou), dalsi jsou 011 (suda - v paritnim je 0)
+        \item selze treti disk, vymeni se za novy, prazdny
+        \item dopocitaji se data opet na sudou paritu: mam prvni byty 01? a v paritnim 1 - aby byla suda, v novem disku musi byt 0, dalsi byty 11? a v paritnim 1 - v novem musi byt 1, apod. ... \\
+    \end{itemize}
+\end{itemize}
+
+\noindent\textbf{definice: (pro \ref{RAIDs}.x)} \\[0.5em]
+\textit{RAID} = Redundant Array of Independent Disks \\[0.2em]
+\textit{parita (bitu)} je sudost/lichost bitu, pocet sudych/lichych 1 bitu \\[0.2em]
+\textit{parity bit} zn., ze na MSB se prida 1 pokud pocet 1 (bitu) je lichy \\
+
+\subsection{Ulozeni dat na disku}
+Diskova jednotka neumozni pracovat s nicim mensim nez sektor, ale typicky OS si sektory nejak seskupi (do vetsi jednotky) a neumozni pracovat s nicim mensim, nez je alokacni blok. \\
+
+\noindent\textbf{Logicka a fyzicka naslednost:}
+\begin{itemize}
+    \item 1 alokacni blok se namapuje fyzicky za sebou na diskovem prostoru,
+    \item vice alokacnich bloku jiz nemusi byt fyzicky na disku za sebou (filesystem se vsak snazi o to, aby tomu tak bylo) \\
+\end{itemize}
+
+\noindent\textbf{definice:} \\[0.5em]
+\textit{alokacni blok} neboli cluster je skupina pevneho poctu sektoru, typicky mocnina 2 (nejmene $2^0$ = 1 alokacni blok), pro sektory v ramci alokacniho bloku je zaruceno, ze jdou za sebou logicky i fyzicky (na disku) v souboru, dale je to nejmensi jednotkou diskovou diskoveho prostoru, se kterym bezne pracuje jadro (filesystem, uzivatel). \\
+
+\newpage
+
+\subsection{Fragmentace}
+
+\subsubsection{Externi fragmentace}
+
+Rozumime jev, ktery vznika v pametech postupnym obsazovanim a uvolnovanim pameti, kdy v pameti vznika sekvence oblasti, ktere jsou volne a pouzite (a pouzite ruznymi soubory). \\
+
+\noindent\textbf{Priklad externi fragmentace:}
+\begin{itemize}
+    \item na disku vytvorim soubor 1, zabira urcite misto,
+    \item pote dalsi soubor 2,
+    \item pote soubor 1 chci zvetsit, tak se soubor 1 rozdeli na 2 casti - soubor 1.1 (puvodni misto kde byl - pred s2) a soubor 1.2, ktery bude za souborem 2,
+    \item stejnym zpusobem zvetsim soubor 2 a vznikne sekvence s1.1, s2.1, s1.2, s2.2,
+    \item nyni se rozhodnu smazat prvni soubor a budu mit sekvenci volne misto, s2.1, volne misto, s2.2 == externi fragmentace. \\
+\end{itemize}
+
+\noindent Externi fragmentace je i na plne obsazenem disku, kde staci, aby byl disk obsazen soubory nespojite (tzn. jeden soubor je rozdelen do vice casti, neni ulozeny na jednom miste, napr. s1.1, s2, s1.2 nebo viz priklad hore). \\
+
+\noindent\textbf{Negativni dopady externi fragmentace:}
+\begin{itemize}
+    \item na disku za urcitych okolnosti (v beznych FS nevznikaji) mohou vzniknout casti prostoru, ktere jsou jiz dale nevyuzitelne, protoze jsou prilis male (tldr vznik volnych useku, ktere nejdou vyuzit)
+    \begin{itemize}
+        \item okolnosti (pri kterych vzniknou nevyuzitelne casti prostoru): pri alokovani diskoveho prostoru spojite (na miru souboru ci jeho castem, nepridelovani po jednotkach pevne velikosti) a navic budu mit dolni mez urcujici velikost diskoveho prostoru tak, aby byl pouzitelny (muze vzniknout v souvislosti s tim, ze do pouzitych diskovych oblasti si mohu ukladat pomocne informace, k cemu se pouzivaji - pokud bude informace vetsi nez "volna dira" - nepouzitelna)
+        \item vznikne nespojite rozlozeny soubor (viz priklad) a je nutne si pamatovat v pomocnych datech = metadatech informace o tom, kde jednotlive casti souboru jsou (ukladaji se na mista, kde jednotlive casti jsou, "odkazuji" se na dalsi metadata - dalsi casti smazaneho souboru),
+    \end{itemize}
+    \item cim vice casti souboru - tim vice metadat - cim vice fragmentovane - tim vice je pristup na data pomalejsi (u HDD se ceka navic na natoceni hlavicek a rotace disku) \\
+\end{itemize}
+
+\noindent\textbf{Souborove systemy se snazi negativni dopady fragmentace minimalizovat:}
+\begin{itemize}
+    \item rozlozeni souboru po disku (snaza ukladat soubory na disk tak, aby nebyly nutne za sebou, ale bylo mezi nimi volny prostor),
+    \item pouzivani predalokace (uzivatel si pozada filesystem o vymezeni urciteho prostoru na disku, napr. databaze),
+    \item odlozena alokace (filesystem nezapise ihned po zmene souboru, ale chvili pocka - pocita s tim, ze uzivatel bude chtit menit soubor "za chvili" znovu - az nebude delsi dobu dochazet ke zmenam, pote hleda vhodny volny prostor) \\
+\end{itemize}
+
+\noindent Pri (intenzivnim) beznem pouzivani disku se vsak fragmentaci nelze vyhnout. Pokud by byla fragmentace prilis vyrazna, je mozne pouzit defragmentacni nastroje, ktere provadeji kopirovani, presouvani casti souboru a reorganizaci diskoveho prostoru tak, aby se fragmentace odstranila - casove narocna operace. \\
+
+\noindent Prvniho negativniho dopadu externi fragmentace (nevyuzitelne a prilis male oblasti) je mozne se zbavit pri pouzivani alokaci po jednotkach pevne velikosti - alokacni bloky - vzdy je ale snaha alokovat spojite (v horsim pripade alokuji nespojite, pokud to nejde) \\
+
+\subsubsection{Interni fragmentace}
+Nespojita alokace po jednotkach pevne velikosti (alokacni bloky) ma vyhodu, ze redukuje dopady externi fragmentace, ale potom vytvari interni fragmentace. Interni fragmentace se obvykle toleruje.  \\
+
+\noindent\textbf{Priklad interni fragmetace:}
+\begin{itemize}
+    \item chci alokovat soubor o velikosti 9 000 B,
+    \item mam 4 KiB velke alokacni bloky,
+    \item potom je nutne alokovat 12 KiB pro tento soubor,
+    \item ty zbyvajici 3 KiB v poslednim alokacnim bloku zustanou nevyuzite. \\
+\end{itemize}
+
+\noindent Existuje nekolik malo filesystemu, ktere se snazi resit interni fragmentaci (ReiserFS, ZFS) pomoci techniky zvane 'tail packing' ("zbavovani ocasku" souboru) - vice souboru muze pouzivat 1 fyzicky alokacni blok (zaplni se volne misto). Vetsine filesystemu toto vsak nepodporuje. \\
+
+\newpage
+
+\subsection{Pristup na disk} \label{pristup-na-disk-detailed}
+(viz \ref{pristup-na-disk}) Proces kdyz chce nacitat/zpracovavat data, zavola sluzbu k tomu urcenou (read, write, .. - muze byt zabaleno i v nejakem knihovnim volani, napr. scanf zavola read), dojde k predani rizeni jadru, dostane se ke slovu jadro, podiva se do cache, pokud tam ta data ma, preda je, pokud ne, musi je nacist z disku - s diskem komunikuje pres I/O porty nebo pametove mapovane I/O porty, disku se predavaji prikazy pres jeho rozhrani (ATA disk - ATA prikazy), jdou z filesystemu pres ovladac prislusneho disku (pote to prochazi sbernicemi), ten komunikuje s radicem disku - disk dostane prikaz, jakmile dobehne operace, disk posle preruseni na procesor, tam se dostava ke slovu jadro, to zpracuje preruseni a zachova se podle nej (uspech - preda data, chyba - zpracuje ji). \\
+
+\noindent\textbf{definice:} \\[0.5em] \label{ovladac}
+\textit{ovladac} je software, ktery umi komunikovat s urcitym typem zarizeni, jina definice viz. \ref{ovladace}
+
+\subsection{Planovani pristupu na disk}
+Soucasti jadra je subsystem nazyvany planovac diskovych operaci, ktery shromazduje pozadavky od filesystemu (nacteni, zapsani dat z/do disku). Planovac si uklada pozadavky do svych planovacich front, pozadavky pripadne preusporadava a predava dal ovladaci ci radici disku k realizaci. \\
+
+\noindent Planovac se snazi minimalizovat rezii disku. \\
+
+\noindent Jednou ze strategii preusporadavani pozadavku (u HDD) je pouziti \textbf{vytahoveho alogritmu (elevator, SCAN alghorithm):}
+\begin{itemize}
+    \item snaha, aby se hlavicka disku plynule pohybovala od stredu k okraji a zpet a vyrizovat pozadavky dle pohybu hlavicky,
+    \item modifikace SCAN algoritmu je napriklad Circual SCAN, kdy se pozadavky vyrizuji pouze pri jednom smeru,
+    \item dalsi modifikace jsou LOOK a C-LOOK, kde se hlavicka nepohybuje od stredu k okraji, ale pouze v tom rozsahu, kde je potreba provadet operace. \\
+\end{itemize}
+
+\noindent\textbf{Planovac se muze snazit vice operaci sloucit do jedne operace} (napr. operace v ramci jednoho bloku se sdruzi):
+\begin{itemize}
+    \item takove kroky maji vyznam i u SSD,
+    \item snaha vyvazovat pozadavky jdouci od jednotlivych uzivatelu (procesu),
+    \item implementace priorit (prioritnejsi proces - pozadavky se vykonaji drive),
+    \item snaha odkladat operace tak (v nadeji), ze je bude pote mozne sloucit,
+    \item snaha implementovat casova omezeni na dobu cekani pozadavku,
+    \item muze implementovat paralelizaci pozadavku predavanych do diskoveho subsystemu (modernejsi a velmi vykonne SSD umi resit operace  paralelne). \\
+\end{itemize}
+
+\noindent\textbf{linux:} \\ [0.5em]
+pro zjisteni, jaky planovac pouzivame se staci podivat do \textit{/sys/block/$<$devname$>$/queue/scheduler} \\
+
+\subsection{Logicky disk} \label{5.11}
+V pocitaci je mozne mit vicero fyzickych disku, ktere je dale mozne rozdelit na logicke disky a konkretni souborove systemy je mozne instalovat na logicke disky. Pro spravu a vytvareni logickych disku lze pouzit programy cfdisk, disk, gparted, .. \\
+
+\subsubsection{Zpusob ulozeni informaci o diskovych oblastech na disku}
+\begin{itemize}
+    \item MBR
+    \begin{itemize}
+        \item v prvnim (nultem) sektoru byla tabulka obsahujici rozdeleni na 1-4 primarni partitions
+        \item pokud bylo nutne pouzit vice partitions, potom misto primarni se nahradila rozsirenou diskovou oblasti, ktera se dale mohla rozdelit na podoblasti zvane logicke diskove oblasti, kazda z nich popsana formou zretezeneho seznamu, EBR
+        \item pouzivane u starsich PC
+    \end{itemize}
+    \item GPT
+    \begin{itemize}
+        \item je tabulka (pole) o az 128 odkazech na jednotlive diskove oblasti,
+        \item stejny vyhrazeny prostor jako u MBR \\
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{LVM}
+\begin{itemize}
+    \item spravce logickych oblasti,
+    \item umoznuje pokrocilejsi tvorbu logickych disku a
+    \item do logickeho disku pridavat fyzicke disky (za behu),
+    \item LVM muze byt bud primo ve filesystemu nebo v casti jadra (mezi filesystemem a planovacem). \\
+\end{itemize}
+
+\subsubsection{Ruzne typy souborovych systemu}
+\begin{itemize}
+    \item fs (prvni fs na unixu), ufs, ufs2,
+    \item ext2, ext3, ext4,
+    \item btrfs (inspirovan ZFS),
+    \item ReiserFS, HSF+/APFS (Mac OS X), XFS, JFS, HPFS,
+    \item FAT, VFAT, FAT32, exFAT (rodina FAT vznikla v MSDOS, pote pouzivany ve Windows - velmi jednoduche a siroce podporovane),
+    \item F2FS (fs pro efektivni prace se SSD), ISO9660, UDF, Lustre, GPFS (clustery, superpocitace),
+    \item ZoneFS (ZFS). \\
+\end{itemize}
+
+\noindent Po koupe noveho disku a rozdeleni na logicke disky je nutne se rozhodnout, jaky souborovy system na prislusnem logickem disku bude pouzivan - je nutne disk \textbf{zformatovat} pro pouziti. Drive se pouzivalo i nizkourovnove formatovani (stare disky s nestabilnim magnetickym zaznamem). \\
+
+\newpage
+
+\subsubsection{Chyby disku (souvislost s FS)}
+
+\noindent Na disku mohou vznikat chyby beznym opotrebenim, nevhodnym vypnutim napajeni, je zapotrebi opravit ridici struktury souboroveho systemu (program fsck - kontroluje konzistenci filesystemu nebo zurnalovani, copy on write, soft updates, ..). \\
+
+\subsubsection{Dalsi typy souborovych systemu}
+
+\noindent\textbf{Virtualni souborovy system (VFS)} je vrstva, ktera v jadre zastresuje vsechny ostatni souborove systemy z toho duvodu, aby jine subsystemy jadra nemusely pracovat specialnim zpusobem s ruznymi souborovymi systemy.  \\
+
+\noindent Existuji take ruzne sitove souborove systemy, treba NFS. \\
+
+\noindent\textbf{Specialni souborove systemy}
+\begin{itemize}
+    \item neukladaji zadna data, obsah neni nikde na disku ani neexistuje zadna specialni cast pameti
+    \item zpristupnuji napr. aktualni stav jadra - adresar /sys, sysfs filesystem,
+    \item procfs filesystem v adresari /proc zpristupnuje informace o bezicich procesech (ale i o nejakych castech stavu jadra),
+    \item tmpfs zase vytvari souborovy system v RAM. \\
+\end{itemize}
+
+\noindent\textbf{definice: (pro \ref{5.11}.x)} \\[0.5em]
+\textit{logicky disk} je taky diskova oblast, partition \\[0.2em]
+\textit{MBR} = master boot record \\[0.2em]
+\textit{EBR} = extended boot record \\[0.2em]
+\textit{GPT} = GUID Partition Table, GUID = Globally Unique Identifier \\[0.2em]
+\textit{LVM} = Logical Volume Manager \\[0.2em]
+\textit{formatovani} zn., ze se nainstaluji metadata (ridici data) souboroveho systemu do prislusne diskove oblasti, v ramci toho se mohou vymazat vsechna data na dane oblasti \\[0.2em]
+
+\newpage
+
+\section{}
+\textbf{Sesta prednaska:} pokracovani Spravy souboru. Zurnalovani, 
+\subsection{Zurnalovani}
+TODO
+
+\end{document}
