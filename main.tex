@@ -1462,6 +1462,495 @@ Pripojovaci volby se mohou zadavat rucne (v terminalu) nebo se mohou predpriprav
 \section{}
 \textbf{Sedma prednaska:} Pokracovani Spravy souboru. Symbolicke odkazy, 
 \subsection{Symbolicke odkazy}
+\begin{itemize}
+    \item je samostatny soubor odkazujici na existujici soubor,
+    \item system pri otevreni automaticky otevre cilovy souboru - vicenasobne zpracovani cesty (ceska k symlinku a cesta uvnitr nej),
+    \item soubor se smaze, pokud jeho pocet jmen klesne na 0,
+    \item symlink muze odkazovat na neexistujici soubor (pri otevreni dojde k chybe),
+    \item muze odkazovat i na jiny logicky disk,
+    \item lze ze symlinku vytvorit cyklkus (jeden odkazuje na druhy a druhy na prvni) - v systemy je preddefinovany maximalni pocet na sebe odkazujicich symlinku (pri prekroceni dojde k chybe),
+    \item symlinky lze vyuzit napr. pri upgradu systemu. \\
+\end{itemize}
+
+\textbf{Rozdil rychlych/pomalych symlinku:}
+\begin{itemize}
+    \item obsahem symlinku je jmeno ciloveho souboru,
+    \item pokud jmeno souboru neni prilis dlouhe (vleze se do i-uzlu), potom se ulozi do i-uzlu = rychly symlink (staci otevrit jen i-uzel),
+    \item pokud se jmeno nezleve do (i-uzlu), alokuji se normalne alokacni bloky na disku = pomaly symlink \\
+\end{itemize}
+
+\textbf{linux:} \\[0.5em]
+\textit{ln -s [existujici soubor] [symbolicky odkaz]} vytvori symbolicky odkaz \\
+
+\newpage
+
+\subsection{Blokove a znakove specialni soubory} \label{blok-char-hw}
+Soubory reprezentujici rozhrani souboroveho systemu k fyzickym (opravdovy hw) ci virtualnim zarizenim (xterminaly, ..). Souborovy system vyvtari souborove rozhrani, tim umoznuje tyto soubory pri urcitych operacich identifikovat (jmeno soubory, napr. /dev/sdX), s celym zarizenim lze take pracovat jako se souborem. \\
+
+Typicky zarizeni sidli v adresari /dev \\
+
+\textbf{Bezne typy zarizeni:}
+\begin{itemize}
+    \item /dev/hda - (drive)oznaceni pro prvni fyzicky disk na prvnim ATA/PATA rozhrani
+    \item /dev/hda1 - (drive) prvni logicky disk na hda
+    \item /dev/sda - prvni fyzicky disk SCSI, navic i disky SATA/PATA (jadro nad temito disky emuluje SCSI)
+    \item /dev/mem - obsah pameti (RAM)
+    \item /dev/zero - nekonecny zdroj 0 bajtu
+    \item /dev/null - soubor typu cerna dira - cokoli se do nej zapise, do se zahodi (presmerovani vystupu programu tak, aby nas neotravoval), pri cteni se tvari jako prazdny soubor
+    \item /dev/random - generator nahodnych cisel
+    \item /dev/tty - terminal
+    \item /dev/lp0 - tiskarny
+    \item /dev/mouse - mys
+    \item /dev/dsp - zvukova karta
+    \item /dev/loop - zarizeni typu (smycka) loop mi umoznuje pripojit soubor jako disk (obraz souboroveho systemu) k adresari, jakoby se jednalo o novy fyzicky disk \\
+\end{itemize}
+
+Tato oznaceni zavisi na pouzitem systemu (Linux, distribuce, ..). Vyhoda zavedeni specialnich souboru je, ze umoznuji identifikovat zarizeni, se kterymi chci pracovat. \\
+
+\newpage
+
+\subsection{Pristupova prava}
+V UNIXu jsou typicky rozlisena na prava pro vlastnika, skupinu vlastniku a ostatni.
+Existuje rozsireni ACL (access control list). \\
+
+\textbf{Uzivatele:}
+\begin{itemize}
+    \item jsou definovani administratorem systemu (root) v /etc/passwd,
+    \item maji definovana sva UID - uzivatelska cisla (root UID = 0),
+    \item kazdy soubor ma sveho vlastnika,
+    \item chown - zmena vlastnika souboru (pouze root), \\
+\end{itemize}
+
+\textbf{Skupiny:}
+\begin{itemize}
+    \item definuje administrator systeu v /etc/group,
+    \item maji sva GID - cislo identifikujici skupinu uzivatelu,
+    \item v kazde skupine je uvedeno, kdo do te skupiny patri,
+    \item kazdy uzivatel muze byt clenem vice skupin,
+    \item jedna z nich je aktualni (pouziva se pri vytvareni souboru) \\
+\end{itemize}
+
+\textbf{linux:} \\[0.5em]
+\textit{groups} - vypis skupin uzivatele \\[0.2em]
+\textit{chgrp} - zmena skupiny souboru \\[0.2em]
+\textit{newgrp} - novy shell s jinym aktualnim GID \\
+
+\newpage
+
+\subsection{Typy pristupovych prav}
+\textbf{Obycejne soubory:}
+r, w, x - pravo cist, zapisovat a spustit soubor jako program. \\
+
+\textbf{Adresare:}
+\begin{itemize}
+    \item r - pravo cist obsah adresare,
+    \item w - pravo zapisovat (vytvaret a rusit soubory),
+    \item x - pravo pristupovat k souborum v adresari (moznost cd adresar, ls -l adresar, ..) \\
+\end{itemize}
+
+\textbf{Typicky vystup pristupovych prav je:}
+\begin{itemize}
+    \item ve formatu: [1:typ souboru] [3:prava vlastnika] [3:prava skupiny] [3:prava ostatnich]
+    \item napr.: -rwx---r-- (ciselne vyjadreni v 8 soustave 0704)
+    \item je obycejny soubor, vlastnik ma vsechna prava, skupina zadna a ostatni maji prava na cteni \\
+\end{itemize}
+
+Zmena pristupovych prava se deje pomoci chmod. (Pro nespustitelne soubory je bezny chmod 0644). \\
+
+\textbf{linux:}
+\textit{chmod [1:pro koho][nova prava] [soubor/y]} zmena pristupovych prav \\
+
+\subsection{Sticky bit}
+Priznak, ktery pokud bude prirazen nejakemu adresari, tak se vytvori adresar, ve kterem i pres pravo cteni a zapisu souboru mohou uzivatele rusit pouze ty soubory, ktere sami vytvorili. (typicky adresar /tmp) (tldr: uzivatel muze mazat, ale pouze to co vlastni) \\
+
+\subsection{SUID, SGID}
+\textbf{S procesy jsou spojeny identifikatory jako jsou:}
+\begin{itemize}
+    \item UID - realna identifikace uzivatele (cislo uzivatele, ktery dany proces spustil)
+    \item EUID - efektivni identifikator pouzivany pro kontrolu pristupovych prav (vetsinou stejne jako UID)
+    \item GID - realna identifikace skupiny (kdo spustil proces)
+    \item EGID - efektivni GID, (stejne chovani jako u EUID) \\
+\end{itemize}
+
+Vlastnik programu muze propujcit sva prava komukoliv, kdo spusti program s nastavenym SUID. (tldr: propujci se prava mezi uzivateli, bezne se to pouziva v pripadech, kdy administrator propujcuje sva prava uzivatelum, napr. passwd) \\
+
+Pri pouziti SUID bude UID = uzivatele, ktery proces spustil a EUID = identifikace vlastnika (= ktery prava pujcil). Pokud budou prava propujcena (pouzito SUID), misto x se vypise s, pokud tam x neni, vypise se S. \\
+
+\subsection{Typicka struktura adresaru v UNIXu}
+\textbf{FHS - Filesystem Hierarchy Standard (Linux), (cast hierarchie):}
+\begin{itemize}
+    \item /bin - programy pro vsechny uzivatele (spustitelne, mohou byt zapotrebi pri bootovani - musi byt dostupne lokalne)
+    \item /boot - soubory pro zavadec systemu (obrazy jadra, pocatecni fs)
+    \item /dev - specialni soubory - rozhrani zarizeni
+    \item /etc - konfiguracni soubory pro system i aplikace
+    \item /home - domovske adresare uzivatelu
+    \item /lib - sdielne knihovny a moduly jadra
+    \item /media - pripojny bod pro prenosna zarizeni
+    \item /mnt - pripojny bod pro docasne filesystemy
+    \item /proc - informace o procesech a jadru
+    \item /root - domovsky adresar superuzivatele
+    \item /run - docasne informace o bezicim systemu (demony)
+    \item /sbin - programy pro superuzivatele (nutne pro bootovani, ne vse je spustitelne superuzivatelem)
+    \item /sys - informace o jadru, zarizenich, modulech, ..
+    \item /tmp - docasne pracovni soubory (obsah se maze pri restartu)
+    \item /usr - obsahuje dale adresare a
+    \begin{itemize}
+        \item soubory, ktere nejsou nutne pri zavadeni systemu, struktura je zde podobna jako u / :
+        \item bin, sbin, lib,
+        \item include (hlavickove soubory),
+        \item share (soubory je mozne sdilet nezavisle na architekture),
+        \item local (koren dalsi hierarchie urcena pro lokalni nestandardni instalace programu),
+        \item src (zdrojove texty jadra)
+    \end{itemize}
+    \item /var - soubory menici se za behu systemu
+    \begin{itemize}
+        \item obsahuje log (zaznamy o cinnosti systemu), 
+        \item spool (pomocne soubory pro tisk),
+        \item mail (postovni prihradky uzivatelu) \\
+    \end{itemize}
+\end{itemize}
+
+\newpage
+
+\textbf{Nove tema: Datove struktury a algoritmy pro vstup/vystup}
+\subsection{Pouziti vyrovnavacich pameti}
+Cilem pouziti cache (vyrovnavacich pameti) je minimimalizace poctu pomalych operaci s periferiemi (disky). Hierarchie:
+kolekce, sbirka dilcich vyrovnavacich pameti (s velikosti 1 alokacniho bloku, ci nasobku), nazyva se buffer-pool, muze mit pevnou velikost, spise je promenna. \\
+
+\newpage
+
+\subsection{Operace se soubory}
+
+\subsubsection{Cteni}
+\textbf{Prvni cteni alokacniho bloku:}
+\begin{itemize}
+    \item zjisti se, zda je blok v pameti,
+    \item pokud ne, naalokuje se novy blok, muze se vyuzit jiz nejaky systemem predalokovany a nevyuzity,
+    \item nactou se data z disku, presunou se do vyrovnavaci pameti,
+    \item vyrovnavaci pamet je v prostoru jadra (bezne procesy zde nemaji pristup),
+    \item vykousne se z nactenych dat tu cast, o kterou ma uzivatel/proces zajem,
+    \item nakopiruje se to do adresoveho prostoru uzivatelskeho prostoru \\
+\end{itemize}
+
+\textbf{Pri dalsim cteni:}
+\begin{itemize}
+    \item nejprve se opet vyhleda, zda je blok v pameti,
+    \item pokud ano,
+    \item nebude se cist z disku, pouze se z alokacniho bloku vykousne cast, o kterou ma uzivatel/proces zajem,
+    \item tato cast se uzivateli preda \\
+\end{itemize}
+
+\subsubsection{Zapis}
+
+\textbf{Postup pri zapisu:}
+\begin{itemize}
+    \item nejprve se zjisti, zda je blok v pameti,
+    \item pokud ne, prideli se vyrovnavaci pamet,
+    \item nactou se data z disku do vyrovavaci pameti,
+    \item jadro prevezme od procesu, ktery chce zapisovat data, ktera chce zapsat,
+    \item prepise jimi danou cast alokacniho bloku, dirty bit se zmeni (0 na 1),
+    \item operace konci (neprovede se zapis na disk),
+    \item casem se provede zpozdeny zapis na disk a vynuluje se dirty bit \\
+\end{itemize}
+
+System sam od sebe s periodou prepisuje cache na disky, lze si to vynutit pomoci sync ci fsync. \\
+
+Pokud je znamo, ze se prepise cely alokacni blok (nebo se jedna o novy blok), buffer se vynuluje a nenacitaji se data z disku do cache. \\
+
+
+\textbf{definice:} \\[0.5em]
+\textit{dirty bit} je indikator toho, jestli jsou data cache sladena s obsahem na disku (0 - data v cache = disk, 1 - data cache != data disk - nuluje se zpozdenym zapisem) \\
+
+\subsubsection{Otevreni souboru pro cteni}
+Pokud soubor jeste \textbf{nebyl otevren}:
+\begin{itemize}
+    \item system musi vyhodnotit cestu a naleznou cislo i-uzlu (resp. cislo datove struktury poskytujici informace o danem souboru - pristupova prava, kde jsou ulozena data),
+    \begin{itemize}
+        \item pri tom se postupne nacitaji i-uzly vsech adresaru vedouci na soubor,
+        \item pote se nacte i-uzel souboru,
+        \item system pouziva d-entry cache (specialni vyrovnavaci pamet pouzita pro preklad odpovidajicich jmen souboru na i-uzel) 
+        \item dale alokuje polozku v tabulce V-uzlu,
+    \end{itemize}
+    \begin{itemize}
+        \item z disku se nacte i-uzel,
+        \item vlozi se do nove alokovane polozky = vznika rozsirena pametova kopie i-uzlu,
+        \item budou tam i informace navic (jako je pocet odkazu na danou polozku - danym i-uzlem muze pracovat vice procesu).
+    \end{itemize}
+    \item v tabulce popisovacu vytvorime novou polozku,
+    \begin{itemize}
+        \item tato tabulka je ulozena v zaznamu o procesu (tabulka procesu v jadre) nebo v uzivatelske oblasti,
+        \item pouzije se nejnizsi volna polozka zde,
+        \item naplni se odkazem na polozku v tabulce otevrenych souboru,
+    \end{itemize}
+    \item pokud se otevreni vydari, vrati se cislo popisovace, pokud ne, tak vraci -1. \\
+\end{itemize}
+
+Tolik tabulek se pouziva pro zamezeni duplikaci udaju. Behem otevirani se provadi kontrola pristupovych prav. Soubor je mozne otevrit v rezimu pro cteni, zapis, cteni i zapis. \\
+
+Dalsi otevreni souboru (\textbf{jiz jednou otevreny}):
+\begin{itemize}
+    \item opet se vyhodnoti cesta k souboru a ziska se cislo i-uzlu,
+    \item system se podiva do tabulku V-uzlu,
+    \item zjisti, ze i-uzel uz tam je,
+    \item nebude se znovu i-uzel nacitat z disku, pouze se zvysi citac pouziti i-uzlu,
+    \item tabulka V-uzlu musi byt vyhledavaci (typicky vyhledaci struktury jako hash tabulka, strom, ..),
+    \item naalokuje se nova polozka v tabulce otevreni (naplni se rezimem otevreni, pozici, odkazem na sdileny V-uzel),
+    \item naalokuje se nove poloza ve file descriptoru ukazujici na nove otevreni (a ta se vrati) \\
+\end{itemize}
+
+\newpage
+
+\textbf{Je mozne pridavat i dalsi identifikatory, napr.:}
+\begin{itemize}
+    \item priznak, ze ma byt soubor vytvoren pokud neexistuje,
+    \item pokud existuje, ma byt zkracen na 0,
+    \item otevrit v rezimu pridavani (kdekoli je aktualne ukazovatko v souboru, tak v pripade zapisu se automaticky posune na konec a tam se prida),
+    \item synchronni zapis (operace zapisu skonci az tehdy, kdyz se data zapisou opravdu na disk) \\
+\end{itemize}
+
+\textbf{Pri chybe:}
+\begin{itemize}
+    \item open vraci -1,
+    \item nastavi se chybovy kod, ktery blize popisuje co se stalo (do knihovni promenne errno),
+    \item existuji standardni chybove kody,
+    \item lze pouzit standardni knihovni funkci perror \\
+\end{itemize}
+
+\textbf{linux:} \\[0.5em]
+\textit{fd = open([jmeno souboru], [rezim]);} otevre soubor \\[0.2em]
+\textit{V-uzly} je tabulka i-uzlu filesystemu VFS \\[0.2em]
+\textit{tabulka popisovacu} je pole s radky cislovanymi od 0 (0 - stdin, 1 - stdout, 2 - stderr) \\[0.2em]
+\textit{tabulka procesu} v jadre je cast adresoveho prostoru, ve kterem ma jadro ulozene pomocne informace k procesum a ma sem pristup pouze jadro \\[0.2em]
+
+\subsubsection{Cteni a zapis z/do souboru}
+\textbf{Cteni:}
+\begin{itemize}
+    \item zkontroluje se platnost popisovace (otevreni popisovace, soubor pro cteni),
+    \item pokud se jedna o prvni pristup, naalokuje se cache, nactou se data do cache a z cache se prislusna data pouziji,
+    \item pokud uz jsou data v cache, nactou se odtud,
+    \item predani se deje pozadovanych z cache (RAM, jadro) do pole (RAM, cache adresoroveho prostoru procesu),
+    \item funkce vraci pocet opravdu prectenych bajtu nebo -1 pri chybe (+ nastavi errno). \\
+\end{itemize}
+
+\textbf{Zapis:}
+\begin{itemize}
+    \item funguje podobne jako read,
+    \item pred vlastnim zapisem kontroluje dostupnost diskoveho prostoru a tento prostor alokuje (rezervuje),
+    \item vraci pocet opravdu zapsanych bajtu nebo -1 \\
+\end{itemize}
+
+\newpage
+
+\textbf{linux:} \\[0.5em]
+\textit{read([popisovac], [adresa pameti, kam se ma zapsat], [kolik bajtu se ma nacist])} precte soubor \\[0.2em]
+\textit{write ([popisovac], [adresa pameti, ze ktere se nactou data], [kolik bajtu se zapise])} zapis do souboru \\
+
+\subsubsection{Primy pristup k souboru}
+Nahodne presouvani v souboru. \textbf{Postup:}
+\begin{itemize}
+    \item zkontroluje zda je popisovac platny (je soubor otevren?)
+    \item nastavi pozici offset bajtu od whence
+    \begin{itemize}
+        \item SEEK\_SET - napr. 200 - posunu se od 200 bajtu od zacatku,
+        \item SEEK\_CUR - od aktualni pozice,
+        \item SEEK\_END - od konce souboru),
+    \end{itemize}
+    \item nelze se posunou pred zacatek souboru,
+    \item je ale mozne se posunout za konec souboru (a zapsat),
+    \item vraci se vysledna pozice od zacatku souboru nebo -1 \\
+\end{itemize}
+
+Posunem za konec souboru a naslednym zapisem vznikaji tzv. ridke soubory (sparse files):
+\begin{itemize}
+    \item umoznuje na disku o nejake kapacite vytvorit soubor, ktery ma zdanlive vetsi velikost nez samotny disk,
+    \item bloky do kterych se nezapisovalo nejsou alokovany a nezabiraji diskovy prostor (pri cteni se povazuji za 0),
+    \item take muze vzniknout mazanim uprostred souboru (hole punching) \\
+\end{itemize}
+
+\begin{figure} [h]
+    \centering
+    \scalebox{2}{\includegraphics{7.9.5.jpg}} \\
+    \caption{z prezentace IOS: Sprava souboru - ridke soubory} 
+\end{figure}
+
+\textbf{linux:} \\[0.5em]
+\textit{lseek([popisovac souboru], [offset], [oproti cemu se chci posouvat])} primy pristup k souboru \\
+
+\newpage
+
+\subsubsection{Zavreni souboru}
+\begin{itemize}
+    \item zkontroluje se platnost file descriptoru (je vubec otevreny?),
+    \item uvolni se dana polozka v tabulce popisovacu,
+    \item system se podiva na odkazovanou polozku v tabulce otevrenych souboru,
+    \item snizi se pocitadlo o 1,
+    \item pokud bude pocitalo != 0, uzavirani skonci,
+    \item pokud bude pocitadlo == 0, pokracuje se do 
+    \item prislusne polozky tabulky V-uzlu, snizi se zde pocitadlo o 1,
+    \item pokud bude zde pocitadlo != 0, uzavreni skonci,
+    \item pokud bude zde == 0, soubor se definitivne uzarve,
+    \item uvolni se z pameti i-uzel z tabulky V-uzlu (se zmenenymi udaji - cas zapisu, pristupu, modifikace i-uzlu, ..),
+    \item naplanuje se blok, ve kterem je i-uzel ulozen,
+    \item casem se i-uzel zapise na disk,
+    \item funkce vraci 0 nebo -1 pri chybe \\
+\end{itemize}
+
+Pokud se proces skonci, automaticky se zavrou vsechny jeho deskriptory. Uzavreni souboru nezpusobi ulozeni obsahu jeho vyrovnavaci pameti na disk. \\
+
+\textbf{linux:} \\[0.5em]
+\textit{close([popisovac souboru])} zavre soubor \\
+
+\subsubsection{Duplikace deskriptoru souboru}
+\begin{itemize}
+    \item zkontroluje se platnost deskriptoru (je soubor otevren?),
+    \item zkopiruje obsah puvodniho popisovace do noveho (odkaz ve fd tabulce se zkopiruje do dalsi polozky v teto tabulce - oboje ukazuji na stejnou polozku tabulky otevrenych souboru + inkrementuje se pocitadlo), 
+    \item automaticky se novy deskriptor uzavre (pokud je otevren),
+    \item vraci index nove vytvorene polozky nebo -1,
+    \item typicke pouziti je u presmerovani (stdin/stdout) \\
+\end{itemize}
+
+\textbf{linux:} \\[0.5em]
+\textit{dup([popisovac])} duplikace deskriptoru (duplikuje existujici popisovac do nejvyssiho volneho noveho) \\[0.2em]
+\textit{dup2([popisovac], [novy popisovac])} duplikace deskriptoru (do ktereho popisovace se duplikuje) \\
+
+\subsubsection{Ruseni souboru}
+\begin{itemize}
+    \item vyhodnoti se cesta, zkontroluje se platnost jmena souboru, pristupova prava (zapis),
+    \item odstrani se pevny odkaz (=hard link) mezi jmenem souboru a i-uzlem,
+    \item zmensi se pocet jmen v i-uzlu,
+    \item pokud je pocet jmen == 0 a i-uzel nikdo nepouziva - i-uzel muze byt uvolnen a mohou byt uvolneny vsechny bloky souboru,
+    \item dokud ma soubor alespon 1 jmeno nebo nema zadne jmeno ale je otevren alespon 1x, nelze soubor z disku opravdu smazat,
+    \item funkce vraci 0 nebo -1 pri chybe \\
+\end{itemize}
+
+Je mozne provest unlink na otevreny soubor (smaze se az po jeho uzavreni) a pracovat s nim dale,
+vyuziti pri instalacich novych verzich programu, ktere aktualne bezi. (upgradovat upgradovaci program) \\
+
+\textbf{linux:} \\[0.5em]
+\textit{unlink([jmeno soubor, prip. cesta])} rusi soubor \\[0.2em]
+\textit{shred} - bezpecne mazani \\
+
+\subsubsection{Dalsi operace se soubory}
+
+\textbf{linux:} \\[0.5em]
+\textit{creat, open} - vytvoreni souboru \\[0.2em]
+\textit{rename} - prejmenovani souboru \\[0.2em]
+\textit{truncate, ftruncate} - zkraceni souboru \\[0.2em]
+\textit{fcntl, lock} - zamykani zaznamu \\[0.2em]
+\textit{chmod, chown} - zmena atributu \\[0.2em]
+\textit{utime} - umoznuje zmenit casy prace se soubory (neumoznuje zmenit cas modifikace i-uzlu) \\[0.2em]
+\textit{stat} - ziskani atributu (velikost, prava, ..) \\[0.2em]
+\textit{sync, fsync} - vynuceni si zapisu vyrovnavacich pameti \\
+
+\subsubsection{Adresarove soubory}
+Obsahuje dvojice cislo i-uzlu a jmena souboru. Adresare nelze zapisovat ci cist po bajtech.
+
+\textbf{linux:} \\[0.5em]
+\textit{mkdir} - tvori se adresare (vytvori polozky . a ..) \\[0.2em]
+\textit{opendir} - otevre adresar \\[0.2em]
+\textit{readdir} - cte adresar \\[0.2em]
+\textit{closedir} - zavre adresar \\[0.2em]
+\textit{creat, link, unlink} - modifikace se provadi neprimo vytvarenim/modifikacemi souboru \\
+
+\subsubsection{Blokove a znakove specialni soubory}
+Predstavuji rozhrani k blokovym / znakovym zarizenim (/dev/..., viz. \ref{blok-char-hw})
+\begin{itemize}
+    \item lze je vytvorit pomoci mknod,
+    \item typicky tyto soubory vytvari jadro ci demoni (udev, devd - pri pripojeni zarizeni se vytvori automaticky prislusny soubor) \\
+\end{itemize}
+
+Pri pouziti beznych souborovych operaci jadro mapuje operace na odpovidajici podprogramy, ktere ty operace implementuji pro dany typ zarizeni s vyuzitim \textbf{tabulek}:
+\begin{itemize}
+    \item znakovych zarizeni,
+    \item blokovych zarizeni \\
+\end{itemize}
+
+Tyto tabulky obsahuji ukazatele na funkce implementujici prislusne operace v ovladacich danych zarizeni. \\
+
+Specialni soubory na disku zabiraji \textbf{pouze i-uzel, krome beznych udaji maji v i-uzlu typ souboru a 2 udaje}:
+\begin{itemize}
+    \item hlavni cislo,
+    \begin{itemize}
+        \item major number,
+        \item udava typ zarizeni
+        \item odkazuje do tabulky zarizeni (hlavni cislo = n-ty radek tabulky),
+    \end{itemize}
+    \item vedlejsi cislo 
+    \begin{itemize}
+        \item minor number, 
+        \item udava instanci zarizeni
+        \item pouziva se jako parametr pri volani urcite operace - parametr funkce ovladace (cislo = ktere zarizeni se ma presne pouzit)
+    \end{itemize}
+    \item typ souboru urcuje tabulku (blok, znak.) \\
+\end{itemize}
+
+\textbf{linux:} \\[0.5em]
+\textit{mknod} vytvori specialni soubory \\[0.2em]
+\textit{ovladac} je sada podprogramu pro rizeni urciteho typu zarizeni (nebo viz xx nebo viz xx) \\
+
+\newpage
+
+\subsection{Terminaly}
+Jsou fyzicka ci logicka zarizeni umoznujici (primarne) textovy vstup a vystup systemu (po radcich), editace vstupniho radku ci specialni znaky (Ctrl+C SIGINT, Ctrl-D konec vstupu, ..) \\
+
+\textbf{Rozhrani:}
+\begin{itemize}
+    \item /dev/tty - pro kazdy proces, ktery ma ridici terminal, odkazuje na jeho ridici terminal
+    \item /dev/ttyS1 - fyzicke terminaly na seriove lince,
+    \item /dev/tty1 - virtualni terminaly (konzole),
+    \item pseudoterminaly (/dev/ptmx - master, /dev/pts/1,..) tvoreny dvojici master / slave, po kazdem otevrenim se vytvori novy slave - emuluje komunikaci pres seriovou linku (umoznuje pro propojeni urcitych casti, napr. SSH - propojeni klienta se vzdalenym klientem) \\
+\end{itemize}
+
+\textbf{Ruzne rezimy zpracovani znaku} (radkove discipliny - line discipline):
+\begin{itemize}
+    \item raw - neprovadi se zpracovani znaku,
+    \item cooked - zpracovani vsech ridicich znaku,
+    \item cbreak - provadi zpracovani maleho poctu znaku (ctrl+c, mazani, ..) \\
+\end{itemize}
+
+Nastaveni rezimu zpracovani znaku je mozne pomoci stty. Dale je mozne nastavit \textbf{rezim terminalu}:
+\begin{itemize}
+    \item prikazy tset, tput, reset,..
+    \item promennou TERM, ve ktere ulozen aktualni typ terminalu,
+    \item typy terminalu (prikazy terminfo, termcap) \\
+\end{itemize}
+
+Tyto prikazy komunikuji s terminalem pomoci \textit{escape sekvenci}. Knihovna curses je standardni knihovna pro rizeni terminalu ci tvorbu aplikaci s terminalovym uzivatelskym rozhranim. \\
+
+\textbf{definice:} \\[0.5em]
+\textit{escape sekvence} jsou sekvence znaku escape, prikaz [parametry], escape, prikaz, .. \\
+
+\newpage
+
+\subsection{Roury}
+Jsou prostredkem meziprocesove komunikace. Rozlisujeme: \\
+
+\textbf{Nepojmenovane roury}
+\begin{itemize}
+    \item nemaji adresarovou polozku, tedy neexistuji v souborovem systemu,
+    \item lze s nimi pracovat pouze tak, ze se vytvori pomoci volani pipe (vrati cteci a zapisovy deskriptor), jakmile dojde k uzavreni - prace s rourou konci,
+    \item mohou s ni pracovat bezne pouze pribuzne procesy,
+    \item je dostupna pomoci popisovacu z tabulky popisovaci (pri klonu procesu se naklonuje tabulka popisovaci - proces bude ukazovat na stejne misto v tabulce otevrenych souboru),
+    \item jedina vyjimka, jak je mozne odkaz na nepojmenovanou rouru predat je pres UNIXove sockety (krome klonovani procesu),
+    \item vytvari se v kolonach (napr. paralelne bezici procesy p1 | p2 | p3 - na presmerovani se pouzivaji nepojmenovane roury) \\
+\end{itemize}
+
+\textbf{Pojmenovane roury}
+\begin{itemize}
+    \item vyvtari se pomoci mknod is mkfifo,
+    \item existuji v souborovem systemu,
+    \item mohou se zavrit, otevrit, apod. \\
+\end{itemize}
+
+Roury slouzi jako mechanismus meziprocesove komunikace. Implementovane jako kruhovy buffer s omezenou kapacitou. Procesy komunikujici pres rouru jsou synchronizovany. \\
+
+\textbf{definice:} \\[0.5em]
+\textit{pribuzne procesy} - pokud jeden proces otevre rouru a zacne se klonovat, vsechny tyto procesy mohou s rourou pracovat \\[0.2em]
+\textit{konzumenti} - procesy, ktere ctou \\[0.2em]
+\textit{producenti} - procesy, ktere zapisuji \\
+
+\subsection{Sockety}
 TUDU
+
 
 \end{document}
