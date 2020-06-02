@@ -120,7 +120,7 @@ Operacni system je program (resp. kolekce programu), ktera vytvari spojujici mez
 \noindent Presna definice, co vse OS zahrnuje neexistuje. Ruzne firmy a komunity to chapou ruzne. (GNU to chape napr. jako projekt svobodneho OS, zahrnujici jadro, utility, GUI, TUI, vyvojove prostredky a knihovny, ...) \\[1em]
 
 \noindent\textbf{definice:} \\[0.5em] \label{procesy} \label{soubory}
-\textit{proces} je aktivita rizena programem \\[0.2em]
+\textit{proces} je aktivita rizena programem (podrobneji se jim venujeme od \ref{procesy-detailed}) \\[0.2em]
 \textit{program} je predpis, navod na nejakou cinnost zakodovany vhodnym zpusobem \\[0.2em]
 \textit{soubor} je kolekce zaznamu (obvykle Byte) slouzici primarne jako zakladni jednotka pro ukladani dat na vnejsich pametovych mediich \\[0.2em]
 \textit{adresar} je kolekce souboru
@@ -151,7 +151,7 @@ Jedna se o nejnizsi a nejzakladnejsi cast OS. Zavadi se jako prvni a bezi po cel
     \item \textit{library interface} - rozhrani vyssi urovne (napr. C knihovny), typicke sluzby jsou napr. printf z C - volaji se funkce ze         systemovych knihoven, mohou ale nemusi vest na volani sluzeb jadra (bezne aplikace pracuji s timto rozhranim) \\
 \end{itemize}
 
-\noindent\textbf{definice:} \\[0.5em]
+\noindent\textbf{definice:} \\[0.5em] \label{prepinani-kontextu-jadro}
 \textit{transformacni system} je system, ktery dostane nejaky vstup, zpracuje ho a udela nejaky vystup (prekladac) - pokud se zacykli = chyba \\[0.2em]
 \textit{reaktivni system} se spusti a do (teoreticky) nekonecna reaguje na podnety uzivatele (spust proces - spusti proces) - pokud prestane pracovat = chyba \\[0.2em]
 \textit{prepinani kontextu} je situace, kdy na CPU bezi proces, ten chci pozastavit a nechat bezet jiny proces \\[0.2em]
@@ -216,11 +216,11 @@ Jedna se o nejnizsi a nejzakladnejsi cast OS. Zavadi se jako prvni a bezi po cel
 
 \subsection{Historie vyvoje OS}
 
-\noindent\textbf{definice:} \\[0.5em] \label{hist-preruseni}
+\noindent\textbf{definice:} \\[0.5em] \label{hist-preruseni} \label{ne-preemtive}
 \textit{preruseni} je elektricky signal, ktery jde od periferie po sbernici k procesoru, na CPU vyvola obsluhu preruseni - mechanismus umoznujici rozbehnout operaci na periferii a o tu periferii se nestarat (periferie pote oznami konec operace) (podrobne se tomu venuje oddil \ref{hw-preruseni}) \\[0.2em]
 \textit{multitasking} je soucasny beh vice aplikaci na jednom procesoru (muze byt s preemtivnim nebo nepreemtivnim planovanim) \\[0.2em]
-\textit{nepreemtivni planovani} zn. ze uloha, kt. aktualne bezi na CPU muze byt od CPU "odstavena" pouze tehdy, kdyz nejak zakomunikuje s jadrem (= pozada o sluzbu jadra, napr. periferni operace), dokonce lze pouzit specializovane sluzby pro prepnuti kontextu (proces se dobrovolne vzda CPU, tzv. yield sluzby) - vyhoda: snadna implementace, nevyhoda: pokud se proces zacykli (chyba), cely system se zablokuje (porad bezi 1 uloha) \\[0.2em]
-\textit{preemtivni planovani} - proces muze byt odstaven od CPU bez nutnosti komunikace s jadrem, napr. pomoci preruseni (jakehokoli typu) \\[1em]
+\textit{nepreemtivni planovani} zn. ze uloha, kt. aktualne bezi na CPU muze byt od CPU "odstavena" pouze tehdy, kdyz nejak zakomunikuje s jadrem (= pozada o sluzbu jadra, napr. periferni operace), dokonce lze pouzit specializovane sluzby pro prepnuti kontextu (proces se dobrovolne vzda CPU, tzv. yield sluzby) - vyhoda: snadna implementace, nevyhoda: pokud se proces zacykli (chyba), cely system se zablokuje (porad bezi 1 uloha - vice viz \ref{planovani}) \\[0.2em]
+\textit{preemtivni planovani} - proces muze byt odstaven od CPU bez nutnosti komunikace s jadrem, napr. pomoci preruseni (jakehokoli typu - vice viz \ref{planovani}) \\[1em]
 
 \subsection{Prehled technickeho vybaveni}
 
@@ -944,11 +944,11 @@ V pocitaci je mozne mit vicero fyzickych disku, ktere je dale mozne rozdelit na 
 
 \noindent Na disku mohou vznikat chyby beznym opotrebenim, nevhodnym vypnutim napajeni, je zapotrebi opravit ridici struktury souboroveho systemu (program fsck - kontroluje konzistenci filesystemu nebo zurnalovani, copy on write, soft updates, ..). \\
 
-\subsubsection{Dalsi typy souborovych systemu}
+\subsubsection{Dalsi typy souborovych systemu} \label{VFS-old} 
 
-\noindent\textbf{Virtualni souborovy system (VFS)} je vrstva, ktera v jadre zastresuje vsechny ostatni souborove systemy z toho duvodu, aby jine subsystemy jadra nemusely pracovat specialnim zpusobem s ruznymi souborovymi systemy.  \\
+\noindent\textbf{Virtualni souborovy system (VFS)} je vrstva, ktera v jadre zastresuje vsechny ostatni souborove systemy z toho duvodu, aby jine subsystemy jadra nemusely pracovat specialnim zpusobem s ruznymi souborovymi systemy. (viz take \ref{VFS-new})  \\
 
-\noindent Existuji take ruzne sitove souborove systemy, treba NFS. \\
+\noindent Existuji take ruzne sitove souborove systemy, treba NFS. (viz take \ref{NFS-more}) \\
 
 \noindent\textbf{Specialni souborove systemy}
 \begin{itemize}
@@ -1223,10 +1223,10 @@ Jistou optimalizaci pouzivanou i u klasickych filesystemu pro male soubory je ul
 \subsubsection{Zretezene seznamy alokacnich bloku}
 \begin{itemize}
     \item kazdy alokacni blok obsahuje sva (uzitecna) data a na konci obsahuje odkaz na nasledujici alokacni blok,
-    \item kvyhodami jsou rychly pristup na zacatek ci pruchod daty,
-    \item knevyhodou je presun na nahodne misto v souboru - nutnost precist cely soubor az po dany blok (1 GiB soubor, chci posledni blok - musim precist cely),
-    \item kdalsi nevyhodou je rozprostreni metadat po celem disku - pri drobne chybe na disku prijdu o data (tedy i metadata, kde jsou odkazy na nasledujici bloky) a dojde k velke ztrate dat (vsechna data "za" ztracenymi daty jsou nepristupna),
-    \item kneni prilis vhodna, nicmene se pouziva v souborovych systemech FAT \\
+    \item vyhodami jsou rychly pristup na zacatek ci pruchod daty,
+    \item nevyhodou je presun na nahodne misto v souboru - nutnost precist cely soubor az po dany blok (1 GiB soubor, chci posledni blok - musim precist cely),
+    \item dalsi nevyhodou je rozprostreni metadat po celem disku - pri drobne chybe na disku prijdu o data (tedy i metadata, kde jsou odkazy na nasledujici bloky) a dojde k velke ztrate dat (vsechna data "za" ztracenymi daty jsou nepristupna),
+    \item neni prilis vhodna, nicmene se pouziva v souborovych systemech FAT \\
 \end{itemize}
 
 \subsubsection{FAT}
@@ -1387,7 +1387,7 @@ V klasickem Unixovem FS a rade jeho nasledovniku (UFS, EXT2, 3), take v NTFS se 
 \newpage
 
 \subsection{Adresar}
-Je to kolecke jinych souboru na nejvyssi urovni abstrakce. Soubor obsahuje mnozinu dvojic jmeno a unikatni ciselne oznaceni. \\
+Je to kolekce jinych souboru na nejvyssi urovni abstrakce. Soubor obsahuje mnozinu dvojic jmeno a unikatni ciselne oznaceni. \\
 
 \textbf{Jmeno souboru:}
 \begin{itemize}
@@ -1399,7 +1399,7 @@ Je to kolecke jinych souboru na nejvyssi urovni abstrakce. Soubor obsahuje mnozi
 \textbf{Cislo souboru:}
 \begin{itemize}
     \item u klasickeho souboru unixu je to cislo i-uzlu,
-    \item v jinych pripadech to slouzi jako klic do dane vyhledavaci struktury (B+ strom)
+    \item v jinych pripadech to slouzi jako klic do dane vyhledavaci struktury (B+ strom) \\
 \end{itemize}
 
 \textbf{Implementace adresaru:}
@@ -1949,8 +1949,408 @@ Roury slouzi jako mechanismus meziprocesove komunikace. Implementovane jako kruh
 \textit{konzumenti} - procesy, ktere ctou \\[0.2em]
 \textit{producenti} - procesy, ktere zapisuji \\
 
-\subsection{Sockety}
-TUDU
+\newpage
 
+\section{}
+\textbf{Osma prednaska:} Dokonceni souborovych systemu: Roury, sockety. Procesy:
+
+\subsection{Sockety}
+Umoznuji jak sitovou (klient-server, TCP, UDP) tak lokalni (filesystem) komunikaci. \\
+
+Pro vytvoreni socketu se pouziva volani socket:
+\begin{itemize}
+    \item nasledne se ceka na pripojeni (bind - propojit socket s TCP/UDP portem ci souborem, listen - zacinam cekat, accept - prijem prichoziho spojeni),
+    \item klient se pripoji pomoci (connect),
+    \item prijem a vysilani zprav (recv / send ci read / write - volani vraci popisovace otevrenych souboru),
+    \item uzarevni (close) \\
+\end{itemize}
+
+Sokety podporuji blokujici i neblokujici I/O. Pri praci s vice sockety je mozne je obsluhovat vice procesy - vlakny (prikaz select) - typy souboru, u kterych muze nastat potreba cekat na moznost provedeni urcite operace. Sokety taky maji vyhodu, ze je mozne vytvorit aplikace, ktere mohou bezet distribuovane v siti. \\
+
+\textbf{definice:} \\[0.5em]
+\textit{blokujici rezim} (I/O) - pokud chci nacitat data ze socketu, budu pozastaven, dokud se nejaka data neobjevi \\[0.2em]
+\textit{select} umoznuje testovat, zda na popisovaci je dostupna nejaka operace (ci mnozine popisovacu) \\[0.2em]
+\textit{pasivni cekani} - nespotrebovava se CPU cas, energie, .. \\
+
+\subsection{VFS} \label{VFS-new}
+Virtual File System. Definice viz. \ref{VFS-old}. Komunikace s ruznymi filesystemy se prenasi z uzivatele na autora fs, ktery pokud chce, aby dany fs byl vyuzitelny, musi ho provazat s VFS (propojeni VFS a uzivatele resi vyvojari). \\
+
+Typicka datova struktura VFS jsou \textbf{V-Uzly} = rozsirene pametove kopie i-uzlu, ktere krome dat i-uzlu obsahuji dalsi data:
+\begin{itemize}
+    \item jako pocet odkazu na v-uzel z tabulky otevrenych souboru, 
+    \item ukazatele na funkce implementujici operace nad i-uzlem (v patricnem filesystemu). \\
+\end{itemize}
+
+\newpage
+
+\subsection{NFS} \label{NFS-more}
+Network File System. Zpristupnuje soubory ulozene na vzdalenych systemech. \\
+
+Jedna se o \textbf{system klient-server}:
+\begin{itemize}
+    \item klient pozada o cteni ze souboru (napr.),
+    \item vsechny operace prochazi pres VFS,
+    \item pozadavek se z VFS preda na NFS klienta,
+    \item NFS klient preda pozadavek na NFS server,
+    \item NFS server pracuje s lokalnim filesystemem jiz na vzdalenem PC,
+    \item ten pracuje take s VFS (ale na serveru), prostrednictvim nej ziska data s lokalniho filesystemu,
+    \item data pote putuji zpet pres sit k uzivateli zpet \\
+\end{itemize}
+
+Umoznuje \textbf{kaskadovani} - je mozne si lokalne do jednoho adresaroveho stromu pripojit vzdaleny strom (a do nej pripojit dalsi vzdaleny filesystem). \textbf{Autentizujeme se nejcasteji pres UID, GID} (musi existovat duvera mezi spravcem lokalniho a vzdaleneho systemu). Nebo se pouziva jine mechanismy (kryptografie, ..) \\
+
+NFS verze 3:
+\begin{itemize}
+    \item starsi, bezestavova verze - nepouziva operace otevirani, uzavirani soubori, kazda operace si musi nest veskere informace o souboru,
+    \item na strane klienta nema cache (slozita implementace), na strane serveru cache,
+    \item nema podporu zamkyani (operace pro zamknuti zaznamu souboru jsou prazdne) \\
+\end{itemize}
+
+NFS verze 4:
+\begin{itemize}
+    \item stavova,
+    \item cache na strane klienta,
+    \item podpora zamykani \\
+\end{itemize}
+
+\subsection{Spooling}
+Simulatenous perpiheral operation on-line (simulatenalni online provadeni perifernich operaci). Jedna se o \textbf{provadeni online bez cekani periferni operace (vystup) na periferiich, ktere nemusi online prokladani dat od ruznych procesu ci uzivatelu podporovat}. (napr. sitova tiskarna - spousta uivatelu, kazdy chce, aby tisk se provedl okamzite)
+
+Vystup se provede do vyrovnavaci pameti spool (soubor), system si vede frontu cekajicich uloh, operaci, do fronty se zaradi odkaz na vytvoreny soubor, uloha se ma dokoncim po uvolneni periferie. \\
+
+\textbf{linux:} \\[0.5em]
+\textit{/var/spool} obsahuje soubory spool \\
+
+\newpage
+\textbf{Nove tema:} Sprava procesu.
+
+Sprava procesu (process management) zahrnuje: \label{procesy-detailed}
+\begin{itemize}
+    \item prepinani kontextu (dispatcher, vzdy v rezimu jadra),
+    \item planovac (nemusi byt v jadre),
+    \item spravu pameti,
+    \item podporu meziprocesove komunikace (signaly, roury, sockety, synchronizace - semafory, mutexy, ..) \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{prepinani kontextu} rozumime fyzicky odebirani procesoru jednomu procesu a pridelovani jimenu procesu (take viz \ref{prepinani-kontextu-jadro}) \\[0.2em]
+\textit{planovac} rozhoduje, ktery proces ci procesy pobezi a pripadne jak dlouho
+
+\subsection{Proces}
+Definice viz \ref{procesy}. Proces je bezici program, tedy aktivni entita, abstrakce aktivity probihajici v systemu. Program je naopak pasivni entita (definice viz \ref{procesy}). \\
+
+\textbf{Proces je v OS definovan:}
+\begin{itemize}
+    \item unikatnim identifikatorem (PID - process identifier),
+    \item stavem planovani,
+    \item ridicim programem,
+    \item obsahem registru (beznych - EAX, BX, EIP, ..),
+    \item zasobnikem (aktivacni zaznamy - informace o rozpracovanych funkcich),
+    \item daty (staticka ne/inicializovana data, hromady, individualne alokovane pameti),
+    \item tim, jake dalsi vazby a zdroje OS vyuziva (jake soubory ma aktualne otevreny, signaly, obsluzne funkce signalu, PPID, UID, GID, semafory, sdilena pamet, sdilene knihovny, ..) \\
+\end{itemize}
+
+\newpage
+
+\subsection{Stavy planovani a jejich zmeny}
+Nejzakladnejsi planovaci diagram (vetsiny/vsech ruznych OS) - \textbf{stavy procesu}. \\
+
+\textbf{Stavy planovani procesu (obecne):}
+\begin{itemize}
+    \item new - proces je inicializovan (vytvari se struktury co jej popisuji, data, proces pripadne ceka ve vstupni fronte dlouhodobeho planovace, ..)
+    \item ready - proces ceka na kratkodoby planovac na prideleni procesoru, dispatcher provede prepnuti, prepne se do running
+    \item running - proces muze byt preruen (preemtivni planovani - opet stav ready), muze pozadat o sluzbu jadro (I/O operace, sync) - stav waiting,
+    \item waiting - proces ceka na dokonceni operace (sluzba jadra), pote pujde do stavu ready,
+    \item terminated - proces skonci (proces se v systemu nejakou dobu vyskytuje ve stavu ukonceny) \\
+\end{itemize}
+
+% obrazek 5/38, sprava procesu
+\begin{figure} [ht]
+    \centering
+    \scalebox{2}{\includegraphics{8.6_1.jpg}}
+    \caption{z prezentace IOS: Sprava procesu - stavovy diagram obecneho planovani procesu}
+\end{figure}
+
+\newpage
+
+\textbf{Stavy planovani procesu v UNIXu:}
+\begin{itemize}
+    \item init - vytvoreny, neinicializovany,
+    \item runnable - pripraven bezet,
+    \item running - proces bezi (pridelen procesor), v pripade preempce (proces se vzda CPU) - jde do runnable,
+    \item sleeping - proces pozada o I/O ci sync akci (ceka na dokonce operace), po realizaci bude runnable
+    \item suspended - pomoci signalu SIGSTOP muze byt proces zmrazen a ceka ceka na rozmrazeni (signal SIGCONT),
+    \item zombified - ukonceni procesu a prechod do stavu zombie (matoha), proces skoncil, odebrany vsechny zdroje, pouze o nem zustava zaznam v tabulce procesu (zde je jeho navratovy kod dokud si ho nekdo neprevezme) \\
+\end{itemize}
+
+% obrazek 6/38, sprava procesu
+\begin{figure} [ht]
+    \centering
+    \scalebox{2}{\includegraphics{8.6_2.jpg}}
+    \caption{z prezentace IOS: Sprava procesu - stavovy diagram planovani procesu v UNIXu}
+\end{figure}
+
+OS s procesem pracuje tak, ze je reprezentovan pomoci struktury PCB (process control block), nekdy take task control block ci task struct. \\
+
+\textbf{PCB zahrnuje (primo / formou odkazu):}
+\begin{itemize}
+    \item identifikatory spojene s procesem,
+    \item stav planovani,
+    \item obsah registru (v okamziku kdy je pozastaven),
+    \item planovaci informace (priorita, ukazatele na planovaci fronty, ..),
+    \item informace spojene se spravou pameti (tabulky stranek pri pouziti strankovaci pameti),
+    \item informace spojene s uctovanim (sumarizuje informace o behu procesu - spotreba CPU, ..),
+    \item informace o vyuziti I/O zdroju (otevrene soubory, tabulka popisovacu, ..) \\
+\end{itemize}
+
+PCB muze byt bud jedna struktura nebo muze byt rozdeleno na nekolik casti. \\
+
+\subsection{Casti procesu v pameti v UNIXu}
+Prvni soucast pameti vyuzite procesem je \textbf{uzivatelsky adresovy prostor} (user address space) - je pristupny procesu (muze z teto casti pameti cist/psat), obsahuje:
+\begin{itemize}
+    \item kod (ktery je rizen, code area/text segment),
+    \item data (ne/inicializovana, hromada, alokovana pamet),
+    \item zasobnik,
+    \item soukroma data sdilenych knihoven, sdilene knihovny ci sdilena pamet \\
+\end{itemize}
+
+Dalsi cast informaci o procesech byva v nekterych pripadech - ne vzdy umistena v \textbf{uzivatelske oblasti} (napr. linux tento koncept nepouziva - vse ma v tabulce procesu):
+\begin{itemize}
+    \item ulozena pro kazdy proces v casti uzivatelskeho adresoveho prostoru, ktera neni pristupna procesu ,
+    \item je to pristupne jadru,
+    \item u kazdeho procesu si v teto casti uklada informace o procesu je tam:
+    \item cast PCB, ktera je pouzivana zejmena za behu procesu,
+    \item PID, UID, EID, GID, EGID, PPID (identifikator rodice),
+    \item obsah registru,
+    \item deskriptory souboru (informace o tom, ktere otevreni souboru reprezentuje stdin, stdout),
+    \item obsluzne funkce signalu (funkce, ktere se budou volat pro obsluhu signalu),
+    \item uctovani,
+    \item pracovni, korenovy adresar \\
+\end{itemize}
+
+\textbf{Dalsi zaznamy jsou v tabulce procesu:}
+\begin{itemize}
+    \item ulozeno trvale v jadru,
+    \item informace o procesu, ktere jsou dulezite i kdyz proces nebezi:
+    \item PID, PPID, UID, EID, ...,
+    \item stav planovani,
+    \item udalost, na kterou proces ceka,
+    \item planovaci informace (pro planovac pri rozhodovani ktery proces dal pobezi ci ne - priorita, spotreba casu, ..),
+    \item cekajici signaly (signaly, kt. mohou prijit, i kdyz proces nebezi),
+    \item odkaz na tabulky dat reprezentujici rozlozeni procesu, dat, kodu, zasobniku, .. \\
+\end{itemize}
+
+\newpage
+
+Pote jsou jeste zaznamy v \textbf{tabulce pametovych regionu:}
+\begin{itemize}
+    \item jak je rozdelen uzivatelsky adresovy prostor na regiony (= souvisly kus pameti pouzity za urcity region, kod, zasobnik, ..),
+    \item velikost techto regionu,
+    \item globalni tabulka regionu (odkaz z teto na lokalni tabulky regionu),
+    \item regiony byvaji cleneny na stranky (tabulky stranek) \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{logicky adresovy prostor} - rozsah vsech logickych adres, ktere se mapuji do fyzicke pameti \\[0.2em]
+\textit{zasobnik jadra} je separatni zasobnik nekdy pouzivan pro ukladani rozpracovanych funkci jadro v okamziku kdy jadro provadi sluzbu pro dany proces \\
+
+\subsection{Kontext procesu}
+Je jine oznaceni pro \textbf{stav procesu}. Rozlisujeme:
+\begin{itemize}
+    \item uzivatelsky kontext - cast stavu procesu popisujici cast pameti dostupnou procesu samotnemu (kod, zasobnik, data),
+    \item registrovy kontext,
+    \item systemovy kontext - cast stavu procesu nedostupna samotnemu procesu (uzivatelska oblast, polozky tabulky procesu, pametove regiony,..) \\
+\end{itemize}
+
+\newpage
+
+\subsection{Systemova volani nad procesy UNIXu}
+= standardni POSIXova volani:
+\begin{itemize}
+    \item fork, exec, exit, wait, waitpid,
+    \item kill, signal - synchronizace,
+    \item getpid, getppid - ziskavani identifikatoru, ... \\
+\end{itemize}
+
+\textbf{Identifikatory spojene s procesy v UNIXu:}
+\begin{itemize}
+    \item identifikace procesu PID (vlastni identifikator procesu),
+    \item identifikace predka PPID (proces, ktery dany proces vytvoril, rodic),
+    \item realny-skutecny uzivatel, skupina uzivatelu, ktery proces spusitl - GID, GID,
+    \item efektivni uzivatel ci skupina - EUID, EGID (viz. SUID, SGID v x.x),
+    \item ulozene EUID a EGID - procesu umoznuji docasne se zbavit vysokych prav, ktere ziskal (proces se dobrovolne vzda vyssich prav - ulozi se a pobezi s beznymi pravi - v okamziku provadeni kritickych operaci si prava zase navysi -- ochrana pred chybami v programech),
+    \item v linuxu FSUID, FSGID (file system UID/GID - oddelena zvysena privilegia pro praci s filesystemu),
+    \item PGID, SID (process group identifier, session identifier - skupina procesu ci sezeni, do kterych proces patri) \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{sezeni} je skupina skupin procesu vytvarejici se typicky pri praci s terminaly \\
+
+\subsection{Vytvareni procesu}
+Procesy v UNIXu vznikaji \textbf{volanim sluzby fork}. Fork je volani, ktere se \textbf{zavola jednou}, pokud nedojde k chybe, tak \textbf{skonci 2x}. Na zaklade volani fork vznika \textbf{vztah rodic-potomek (parent-child) a hierarchie procesu}. Vysledkem forku je totiz \textbf{duplikace procesu}. Vznika takrka identicka kopie potomka, ktery dedi:
+\begin{itemize}
+    \item ridici kod, data, zasobnik, sdilenou pamet, otevrene soubory, obsluhu signalu, vetsinu synchronizacnich prostredku, ..
+    \item pro efektivitu pouziva pro praci s pameti copy-on-write
+    \item kopie se lisi v navratovem kodu fork, identifikatorech, udajich spojenych s planovanim a uctovanim, nededi se cekajici signaly, souborove zamky a nektere dalsi zdroje ci nastaveni .. \\
+\end{itemize}
+
+\textbf{Navratove kody forku:}
+\begin{itemize}
+    \item 0 - fork se zdaril, if(pid==0) { kod pro potomka }
+    \item -1 - fork se nezdaril, if(pid==-1) { kod rodice }
+    \item cokoli jineho (PID potomka) - else { kod pro rodice } \\
+\end{itemize}
+
+\newpage
+
+\subsection{Hierarchie procesu v UNIXu}
+Prvnim procesem, ktery vznika a vyvtvari ho jadro je \textbf{proces init s PID=1} (aktualni novejsi implementace je pojmenovana jako systemd - prikaz pstree). Tento proces je \textbf{predkem vsech ostatnich uzivatelskych procesu}. \textbf{PPID initu je 0}.
+
+Existji take procesy jadra (kernel threads/processes), jejich init predkem neni:
+\begin{itemize}
+    \item jejich kod je soucasti jadra,
+    \item vyskytuje se i proces s PID=0, vznika uplne jako prvni, podili se na inicializaci jadra, nasledne se meni na swapper (pokud je na systemu pouzit) nebo na cekaci smycku ci je to pouzivano jako procesova obalka pro vlakna jadra (na linuxu se tento proces nevypisuje) \\
+\end{itemize}
+
+Init se podili na \textbf{inicializaci systemu}, pote \textbf{prebira navratove kody procesu, ktere skonci, ale ktere osirely driv nez skoncily} (tedy rodic skonci driv nez potomek) - teoreticky by byl zombie procesem do nekonecna, proto init prebira jeho navratovy kod a umozni mu odchod ze systemu.
+
+\textbf{definice:} \\[0.5em]
+\textit{swapper} je proces, ktery slouzi k tomu, ze v pripade akutniho nedostatku pameti nektere procesy pozastavi a zcela ulozi na disk (veskere casti pameti zabirane procesem) \\[0.2em]
+\textit{kthread} je proces, na linuxu init pro procesy jadra, ma PID=2 \\
+
+\textbf{linux:} \\[0.5em]
+\textit{pstree} vypis stromu procesu \\
+
+\subsection{Zmena programu -- exec}
+Umoznuje v ramci existujiciho procesu vymenit "jeho vnitrnosti" - \textbf{zahodit existujici kod a nahradit ho kodem jinym}. Exec je funkce, ktera se \textbf{zavola jednou a neskonci vubec} (je v nejakem kodu, ten kod prestane bezet) pokud nedojde k chybe.
+
+Pokud v procesu zavolam exec:
+\begin{itemize}
+    \item porad dedi radu rysu sveho predka,
+    \item zustava mu rada zdroju a vazeb OS (identifikatory, otevrene soubory, ..),
+    \item zanikaji vazby a zdroje vazane na puvodni ridici (obsluzne funkce signalu, sdilena pamet, pametove mapovane soubory, semafory).
+\end{itemize}
+
+Skupina funkci exec:
+\begin{itemize}
+    \item execve (zakladni volani), execl, execlp, execle, execv, ..
+\end{itemize}
+
+Pozn.: Ve Windows se procesy vytvari volanim CreateProcess( ... ), ktere zahrnuje funkcnost fort i exec. \\
+
+\newpage
+
+\subsection{Cekani na potomka - wait, waitpid}
+Slouzi k tomu, aby mohl \textbf{rodic cekat (pasivne) na dokonceni cinnosti svymi potomky}.
+
+Volani wait:
+\begin{itemize}
+    \item ceka na ukonceni 1 z potomku,
+    \item vraci cislo potomku, ktery skoncil (pripadne -1 pokud prijde signal, ktery cekani prerusi nebo pokud cekame na potomka a zadneho nemame),
+    \item muze to byt operace blokujici, pokud zadny z potomku jeste neskoncil, 
+    \item pokud nektery potomek skoncil driv pred volanim wait, okamzite volani wait skonci a vrati se navratovy kod. \\
+\end{itemize}
+
+Volani waitpid:
+\begin{itemize}
+    \item umoznuje cekani na ukonceni urciteho potomka urcite skupiny dle PID
+    \item umoznuje cekani i na pozastaveni ci probuzeni (SIGSTOP, SIGCON). \\
+\end{itemize}
+
+\subsection{Start systemu}
+\begin{itemize}
+    \item (nejprve) dostane se ke slovu firmware PC (UEFI/BIOS),
+    \item nacteni a spusteni zavadece OS (nekdy se zavadecu pouziva nekolik, napr. BIOS vyuzival zakladni kod MBR - serie zavadecu),
+    \item nactou se inicializacni funkce jadra a samotneho jadro, spusteni inicializacnich funkci,
+    \item inicializacni funkce jadra vytvori proces 0, dalsi procesy jadra a proces init,
+    \item proces init pokracuje v inicializaci systemy, spostu demony a procesy,
+    \item v urcitem okamziku se z nej spusti procesy umoznujici prihlaseni v GUI (GDM, SDDM, LightDDM) bud z nich nebo s nim spolupracujici procesu se spousti procesy pro praci s X Windows,
+    \item na konzolich se spusti getty (ctrl+alt+f1,f2,..) - umozni uzivateli zadat prihlasovaci jmeno, zmeni se na login, nacte od uzivatele heslo, pote se zmeni na shell, ze ktereho se spousti dalsi procesy, po ukonceni se opet spousti getty,
+    \item proces init i po inicializaci nadale bezi, prebira navratove kody procesu, jejich rodic skoncil driv nez prislusny proces, take resi reinicializaci systemu (na prani uzivatele ci vypadek napajeni) \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{firmware} je program ulozeny v nevolatilnich pametech, provadejici kontrolu hadrware, pripadnou inicializaci hw  \\
+
+\newpage
+
+\subsection{Urovne behu}
+System urovni behu byl zaveden jiz v UNIX System V. Rozlisuji se urovne behu 0-6: (nektere mely predpripraveny standardni vyznam, nektere si definoval administrator)
+\begin{itemize}
+    \item 0=halt - zastaveni systemu,
+    \item 1=single user - jednouzivatelsky rezim, pouziva spravce systemu,
+    \item 3-6=definovane rezimy adminem,
+    \item 6=reboot - automaticke restartovani,
+    \item s/S=jednouzivatelsky rezim - daji se zde ale definovat ruzne akce, ktere se maji provadet pri prepnuti do techto rezimu,
+    \item je mozne zmenit urovne behu (rezimy) pomoci \textit{tellinit N}. \\
+\end{itemize}
+
+Konfigurace urovni behu:
+\begin{itemize}
+    \item v adresari /etc/rcX.d (X=uroven behu), jsou skripty spoustene pri vstupu do dane urovne,
+    \item nejprve se volaji skripty zacinajici K v poradi danem cislem za tim K (volaji se s argumentem stop),
+    \item pote se volaji skripty zacinajici S (volaji se s argumentem start),
+    \item start, stop - definuje se co se ma spustit ci jak se co ma zastavit,
+    \item v adresari /etc/init.d vytvorime skript, ktery pozadovanou sluzbu bude umet spoustet, na patricne misto K a S odkazu se vytvori symlink na pozadovany skript,
+    \item skripty v inid.d typicky prijimaji parametry start, stop, reload, restart
+    \item tyto skripty se nemusi volat pouze pri zmene urovne behu, ale je mozne je volat i rucne - z /etc/inid.d
+    \item v souboru /etc/inittab je horni, hlavni uroven systemu, kde se popisuje napr. implicitni uroven behu ci jake urovne behu jsou podporovane \\
+\end{itemize}
+
+Existuji ruzne nove implementace procesu init - dnes nejbeznejsi je \textbf{systemd}:
+\begin{itemize}
+    \item zakladni urovne behu jsou nahrazeny jednotky (units), ktere maji ruzne typy (targets, services, ..),
+    \item spousti inicializacni jednotky paralelne na zaklade jejich zavislosti (= vyhodou je, ze inicializace systemu je mozne provadet paralelne, zatimco init se dela sekvencne),
+    \item emuluji se urovne behu (zpetna kompatibilita),
+    \item uzitecne jsou adresare /lib/systemd ci /usr/lib/systemd, .. (podrobne informace o systemd) \\ 
+\end{itemize}
+
+\newpage
+
+\subsection{Planovani procesu} \label{planovani}
+Procesy planuje planovac.
+
+Rozlisujeme 2 \textbf{planovaci algoritmy} (definice viz. \ref{ne-preemtive}):
+\begin{itemize}
+    \item nepreemtivni planovani (typicky I/O operace, konec - volani exit, vzda se CPU - yield),
+    \item preemtivni planovani (typicky preruseni od casovace, muze jit i o jine, treba od disku) \\
+\end{itemize}
+
+Rozlisujeme \textbf{3 "typy" planovani}:
+\begin{itemize}
+    \item dlouhodobe planovani - ktere ulohy budou pripusteny do systemu,
+    \item strednedobe planovani - procesy maji pamet / nemaji pamet - jedna se o system swapovani,
+    \item kratkodobe planovani - procesy maji pamet - prepinani mezi ulohami \\
+\end{itemize}
+
+\textbf{System swapovani} (= strednedobe planovani):
+\begin{itemize}
+    \item v pripade nedostatku pameti nektere procesy pozastavi, odebere jim veskerou pamet a ulozi je na disk,
+    \item tyto procesy jsou vyrazeny z planovani (nemaji pamet - nemohou bezet),
+    \item pri zadosti o spusteni ulohy uloha pak nebude spustena ihned, ale system ceka na uvolneni systemovych zdroju (sluzba ceka ve fronte) - pote uz se jedna dlouhodobe planovani (rozhoduje se o tom, ktere ulohy budou vubec pripusteny do systemu) \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{planovac} rozhoduje ktery proces ci procesy pobezi a pripadne jak dlouho \\[0.2em]
+\textit{systemy s neepremtivnim planovanim} = systemy s kooperovanym planovanim (procesy musi spolupracovat, kooperovat) \\
+
+\subsection{Prepnuti kontextu (procesu)}
+Prepnuti kontextu na prikladu - dispecer na zaklade rozhodnuti planovace prepina mezi procesem A a B:
+\begin{itemize}
+    \item bude muset uchovat stav registru (nekterych, ale vcetne ridicich registru) procesu A do PCB (nebo task struct v linuxu),
+    \item dojde k uprave nekterych ridicich struktur v jadre (uprava planovacich struktur, uctovacich struktur, ..),
+    \item obnova ulozenych hodnot registru procesu B,
+    \item dojde k predani rizeni proceu na adresu, kde bylo drive preruseno provadeni procesu B,
+    \item tato akce se musi provadet v rezimu jadra \\
+\end{itemize}
+
+Neuklada se a neobnovuje cely stav procesu (pri pozastaveni procesu neni nutne na disk ukladat obsah pameti, ukladaji se pouze registry).
+
+Presto prepnuti muze trvat \textbf{radove stovky/tisice instrukci} - jadra umoznuji interval v jakem prichazeji preruseni z casovace - je treba si dat pozor, aby ten interval nebyl prilis kratky, protoze zacne pote prevazovat rezie systemu nad uzitecnym behem (neustale ukladani a obnovovani obsahu registru).
+
+\newpage
+
+\subsection{Kratke planovaci algoritmy}
+TUDU
 
 \end{document}
