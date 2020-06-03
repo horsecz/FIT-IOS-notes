@@ -2350,7 +2350,279 @@ Presto prepnuti muze trvat \textbf{radove stovky/tisice instrukci} - jadra umozn
 
 \newpage
 
+\section{}
+\textbf{Devata prednaska:} Dokonceni spravy procesu.
+
 \subsection{Kratke planovaci algoritmy}
-TUDU
+\subsubsection{FCFS}
+\begin{itemize}
+    \item first come, first served,
+    \item planovaci algoritmus zalozeny na jednoduche FIFO fronte,
+    \item proces, ktery nove vznikne nebo je uvolnen z cekani na nejake operaci (I/O, sync, ..), pripadne proces, ktery se vzda CPU,
+    \item se zaradi na konec fronty,
+    \item procesy, ktere pobezi se vybiraji ze zacatku fronty,
+    \item jedna se o nepreemtivni algoritmus (prepnuti kontextu dojde pokud se bezici proces vzda CPU ci zavola sluzbu jadra) \\
+\end{itemize}
+
+\subsubsection{Round-robin}
+\begin{itemize}
+    \item preemtivni obdoba FCFS,
+    \item pracuje podobne jako FCFS,
+    \item kazdy proces ma prideleno nejake casove kvantum,
+    \item jakmile je mu pridelen CPU, proces bezi a pobezi nanejvys po dobu casoveho kvanta,
+    \item po vyprseni casu je procesu odebran CPU a je zarazen na konec fronty,
+    \item CPU se prideli procesu ze zacatku fronty \\
+\end{itemize}
+
+\subsubsection{SJF}
+\begin{itemize}
+    \item shortest job first,
+    \item nejprve se provede nejkratsi uloha,
+    \item algoritmus prideluje CPU tomu procesu, ktery aktualne deklaruje nejkratsi dobu pro svuj dalsi beh na CPU, po ktery nebude zadat o zadne I/O operace (tzv. CPU burst),
+    \item beh uloh se deli na vypocetni prace (CPU burst) a pote na periody, kdy se komunikuje s periferiemi (disky, site,..),
+    \item nepreemtivni algoritmus (neprerusuje proces pred dokoncenim jeho aktualni vypocetni faze),
+    \item statisticky minimalizuje prumernou dobu cekani a zvysuje propustnost systemu,
+    \item je nutne dopredu znat dobu behu procesu na CPU v jejich jednotlivych vypocetnich fazich, ci musi tu byt moznost tyto doby rozumne odhadnout (na zaklade predchoziho chovani techto uloh),
+    \item dava smysl pro opakovane provadene ulohy, 
+    \item pouziva se zejmena v davkovych (specializovancyh) systemech,
+    \item nevyhodou algoritmus je starnuti (hladoveni, starvation) - ke starnuti dochazi pri cekani na nejake zdroje (CPU, zamek, ..) je situace, kdy nektery proces, ktery o ten zdroj zada, na nej ceka bez zaruky, ze nej nekdy ziska,
+    \item pokud nejaky proces deklaruje delku CPU burst a v systemu budou neustale kratsi procesy s touto delkou, tyto procesy ho budou neustale predbihat (nikdy se tak k CPU nedostane) \\
+\end{itemize}
+
+\subsubsection{SRT}
+\begin{itemize}
+    \item shortest remaining time,
+    \item preemtivni obdoba SJF,
+    \item je zde prevence pri vzniku ci uvolneni procesu z cekani (kdyz se uvolni novy proces a deklaruje kratsi vypocetni fazi nez ten, ktery dosud bezel - muze byt provaden on), \\
+\end{itemize}
+
+\subsubsection{Viceurovnove planovani}
+\begin{itemize}
+    \item procesy rozdeleny do ruznych skupin (typicky dle priority, ale ne nutne - napr. dle typu procesu),
+    \item kazda skupina procesu muze pouzivat jiny dilci planovaci algoritmus (FSFS, round-robin, SJF, ..) s ruznymi parametry,
+    \item krome toho mame dalsi ("hlavni") algoritmus, ktery rozhoduje, ktera skupina procesu dostane CPU cas - casto jednoduse na zaklade priorit skupin,
+    \item pote je dalsi planovaci algoritmus, ktery planuje mezi skupinami \\
+\end{itemize}
+
+\subsubsection{Viucerovnove planovani se zpetnou vazbou}
+\begin{itemize}
+    \item skupiny procesy jsou rozdeleny dle priorit,
+    \item proces, ktery se stane nove pripravenym bezet (nove vznikne, je uvolnen z cekani, ..) je zarazen do skupiny procesu s nejvyssi prioritou.
+    \item v teto skupine bezi a postupne klesa do nizsich priorit,
+    \item az spadne do nejnizsi urovne (planovan round-robin),
+    \item pouzivaji se varianty, kdy proces ma prednastavenou statickou prioritou a zaradi se do planovaci urovne teto priority, a pote ma i dynamickou prioritu, ktera se muze zvysovat i snizovat, typicky se priority meni tak, ze pokud nejaky proces spotrebovava mnoho CPU casu - priorita se snizi, proces ceka na mnoho I/O operaci - priorita se zvysi,
+    \item cilem je zajistit rychlou reakci interaktivnich procesu, \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{interaktivni procesy} jsou procesy komunikujici s uzivatelem \\ 
+
+\subsection{Planovac v Linuxu (od verze 2.6.23)}
+Pouziva se \textbf{viceurovnove prioritni planovani se 100 zakladnimi statickymi prioritnimi urovnemi}:
+\begin{itemize}
+    \item priority 1-99 jsou vyhrazeny pro procesy realneho casu (algoritmy FCFS s preemci na zaklade priorit nebo round-robin),
+    \item priorita 0 jsou bezne procesy planovane CFS planovacem,
+    \item v ramci urovne 0 se pouzivaji podurovne v rozmezi -20 az 19, nejvyssi poduroven je -20 (je mozne bezne uzivatelsky nastavovat prikazy nice/renice),
+    \item v ramci urovne 0 se rozlisuji 3 typu procesu (bezne, davkove a idle procesy),
+    \item zakladni prioritni uroven (RT proces v 1-99, bezny proces) a typ planovani (round-robin, FCFS, ..) je mozne nastavit pomoci sluzby sched\_setscheduler,
+    \item pozdeji pridano planovani pro sporadicke periodicke ulohy - zalozeno na strategii earliest deadline first (prezvato z RT OS) \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{FCFS s preemci na zaklade priorit} - pokud behem behu procesu dobehne I/O operace ci sync operace, ktera zpusobi proveditelnost procesu s vyssi prioritou, dojde k prepnuti kontextu  (nedochazi k prepnuti kontextu na zaklade casovych kvant s procesy s stejnou prioritou) \\[0.2em]
+\textit{davkove procesy} maji mirnou penalizaci s hlediska priorit, maji ale delsi kvantum \\[0.2em]
+\textit{idle} maji nizkou prioritu, procesy, u ktery se predpoklada, ze se dostanou ke slovu az v okamzik, kdyz v systemu nic uzitecnejsiho neni \\[0.2em]
+\textit{sporadicke periodicke ulohy} jsou ulohy, ktere bezi, maji periodicke vypocetni faze (ocekavana faze - zname dobu jak dlouho trvaji + mame casovy limit, dokdy se maji vypocty provest), ktere se provadeji cas od casu \\[0.2em]
+
+\subsection{Completely Fair Scheduler}
+Neboli CFS planovac:
+\begin{itemize}
+    \item snazi se explicitne kazdemu procesu poskytnout odpovidajici procento strojoveho casu s ohledem na jeho priority (4 procesy, stejna priorita - vsichni 25 procent CPU),
+    \item u kazdeho procesu si vede udaje o tom, kolik virtualniho CPU casu uz ten proces na CPU stravil,
+    \item vede si udaj o minimalnim stravenem CPU case (dava nove pripravenym procesum),
+    \item procesy udrzuje ve vyhledavaci strukture red-black tree podle vyuziteho CPU casu,
+    \item pri rozhodovani, ktery proces pobezi, z strukturu vezme ten, ktery aktualne stravil nejmene casu na CPU,
+    \item proces necha bezet po casove kvantum, ktere spocita na zaklade priorit,
+    \item virtualni procesorovy cas - situace: 2 procesy bezici cely den (kazdy pul dne), prijde novy proces, fyzicky na CPU bezel 0s (nejvyssi priorita, bezel by pul dne a ty 2 by byly off), proto virtualni CPU cas - novy proces dostane cas mensi nez minimalni straveny cas vsemi procesy (ne 0),
+    \item algoritmus ma podporu pro skupinova planovani, umi rozdelovat cas spravedlive pro skupiny procesu (spoustene z ruznych terminalu, od ruznych uzivatelu, ..) \\
+\end{itemize}
+
+\subsection{Planovani ve Windows NT a novejsich}
+\begin{itemize}
+    \item Pouziva se viceurovnove prioritni planovani se zpetnou vazbou na zaklade interaktivity:
+    \item 32 prioritnich urovni, 0 - nulovani volnych stranek pameti (aby pres ne se nedostaly informace od jednoho uzivatel k jinemu), 1 - 15 bezne procesy, 16 - 31 procesy realneho casu,
+    \item zakladni priorita procesu je dana kombinaci planovaci tridy a planovaci urovne (v ramci tridy),
+    \item priorita se dynamicky snizuje ci snizuje:
+    \item zvysi se priorita procesu spojene s oknem, ktere je v popredi,
+    \item zvysi se priorita procesu spojene s oknem, do ktere prichazi vstupni zpravy (mys, casovac, klavesnice, ..),
+    \item zvysuje se priorita procesu uvolnenych z cekani (I/O operace),
+    \item zvysena priorita se po kazdem vycerpani kvanta snizu o jedno uroven (az do dosazeni zakladni priority) \\
+\end{itemize}
+
+\subsection{Inverze priorit}
+Jedna se o \textbf{nezadouci problem}, ktery je nutne resit:
+\begin{itemize}
+    \item jedna se o situaci, kdy v OS mame ruzne prioritni procesy, malo prioritni proces si naalokuje si nejaky zdroj, zamkne si pristup k nejakemu sdilenemu sdroji (soubor, adresa v pameti, sitovy port, ..),
+    \item viceprioritni procesy tyto procesy predbihaji, 
+    \item nizkoprioritni proces se cas od casu dostane ke slovu, provede par instrukci, musi cekat,
+    \item (ma naalokovany zdroj, chce s nim neco provest, to ale trva dlouho, protoze ho porad nekdo predbiha),
+    \item muze nastat, ze nektery z viceprioritnich procesu potrebuje prave ten zdroj, ktery si zamknul tento nizkoprioritni proces,
+    \item vysoceprioritni proces bude muset tak cekat - virtualne se zvysi (rapidne) priorita nizkoprioritniho procesu (= je to vedlejsi efekt, prioritu ma porad stejnou!),
+    \item v systemu je mozne mit stredneprioritni procesy, ktere tento zdroj nepotrebuji, ty budou predbihat dale nizkoprioritni proces,
+    \item vysokoprioritni proces musi cekat, zatimco stredneprioritni a nizkoprioritni maji najednou "vyssi prioritu",
+    \item tento jev muze a nemusi vadit - muze zpusobit snizenou odezvu systemu, nicmene muzou se zablokovat i nektere kriticke procesy realneho casu (ovladani hardware, ..) \\
+\end{itemize}
+
+\textbf{Moznosti reseni inverze priorit:}
+\begin{itemize}
+    \item prioritni strop - priority ceiling - procesy v kriticke sekci ziskavaji nejvyssi prioritu,
+    \item priority inheritance - procesy v kriticke sekci, ktery blokuje vyse prioritni procesy po dobu behu v kriticke sekci dedi prioritu cekajiciho procesu (s nejvyssi prioritou),
+    \item na jednoprocesorovych systemech se pouziva technika, kdy po dobu behu v kriticke sekci se zakaze preruseni \\
+\end{itemize}
+
+Dalsi komplikace behem planovani:
+\begin{itemize}
+    \item viceprocesorove systemy - nutne vyvazovat vykon (aby na jednom jadru CPU nebezely 4 procesy a na zbytku 0), respektovat obsah cache CPU, lokalitu pameti (neuniformni pristup do pameti)
+    \item hard real-time systemy - nutnost zajistit garantovanou odezvu nekterych akci \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{kriticka sekce} je sekce v kodu, kde se pracuje vylucnym zpusobem se sdilenymi prostredky \\[0.2em]
+\textit{neuniformni pristup do pameti} - pamet je delena na pametove jednotky, kazda pripojena k jinemu CPU, ale vsechny procesy mohou pristupovat do vsech pametovych jednotek (za ruznou dobu) \\
+
+\subsection{Vlakna, ulohy, skupiny procesu}
+Vlakna, neboli threads:
+\begin{itemize}
+    \item oznacovana jako odlehcene procesy (LWP - lightweight process),
+    \item vypocty (odpovidaji vlaknum) bezici paralelne v jednom procesum,
+    \item vlakna maji vlastni obsah registru, vlastni zasobnik,
+    \item vsechna vlakna sdili stejny ridici kod, data, dalsi zdroje (otevrene soubory, signaly),
+    \item vyhody: rychleji se spousti, prepina, efektivnejsi prace (dle systemu - v UNIXu diky fork rozdil mezi vlakny a procesy je mensi nez jinych OS), .. \\
+\end{itemize}
+
+\newpage
+
+\subsection{Ulohy, skupiny procesu, sezeni}
+\textbf{Uloha (job)} se poji se shellem, je skupina skupina paralelne bezicich procesu spustenych jednim prikazem, prikazy propojene do kolony (p1 | p2 | p3 - pipeline). \\
+
+\textbf{Skupina procesu (process group) v UNIXu:}
+\begin{itemize}
+    \item mnozina procesu paralelne bezicich, se kterymi je mozne provadet operace jako s celkem,
+    \item skupine je mozne poslat signal jako 1 jednotce,
+    \item predek take muze cekat na libovolneho potomka z urcite skupiny,
+    \item kazdy proces prave v 1 skupine procesu, po vytvoreni vzdy je to skupina jeho predka,
+    \item skupina muze a nemusi mit vedouciho - jeji prvni proces, dokud neskonci (pokud skonci - skupina bez vedouciho),
+    \item skupina je identifikovana vedoucim skupiny, pokud vedouci skupiny skonci, neni mozne jeho cislo recyklovat a pouzit pro ID skupiny \\
+\end{itemize}
+
+\textbf{Sezeni v UNIXu:}
+\begin{itemize}
+    \item mnozina skupin procesu,
+    \item kazda skupina procesu je v jednom sezeni,
+    \item sezeni muze a nemusi mit vedouciho,
+    \item muze mit ridici terminal (/dev/tty),
+    \item v ramci sezeni plati, ze jedna skupina je na popredi (cte z terminalu), ostatni jsou na pozadi,
+    \item pokud terminal konci, signalem je SIGHUP, informovan je vedouci sezeni (typicky shell), standardtne se vsem procesum, na ktere nebyl uzit prikaz nohup/disown, posle navic SIGHUP, pokud jsou procesy pozastaveny, tak posle signal SIGCONT \\
+\end{itemize}
+
+\newpage
+
+\subsection{Komunikace procesu}
+Pouziva se \textbf{IPC - inter-process communication:}
+\begin{itemize}
+    \item signaly (umoznuji zasilat mezi CPU informace pomoci cisla),
+    \item roury,
+    \item zasilani zprav (umoznuji posilat retezcova data),
+    \item sdilena pamet,
+    \item sockety,
+    \item RPC (remote procedure call), ... \\
+\end{itemize}
+
+\subsection{Signaly}
+V zakladni verzi je cislo (int), ktere je procesu zaslano prostrednictvim pro to zvlast definovaneho rozhrani (= signaly v OS, nikoli na vodicich). Jsou generovany:
+\begin{itemize}
+    \item pri chybach (aritemticka chyba, chyby sbernic, ..),
+    \item externich udalostech (dostupnost I/O, vyprseni casovace, ..),
+    \item na zadost procesu - IPC (meziprocesova komunikace, procesy si mohou navzajem posilat singnaly, ale jadru signal nelze zaslat - jadro neni proces),
+    \item vznikaji obvykle asynchronne k cinnosti programu (program neco provadi, nezavisle na tom co provadi v okamziku ktery nelze predpovedet prijde signal) \\
+\end{itemize}
+
+Je nutne peclive zvazovat obsluhu signalu, aby aplikaci \textbf{signal neshodil, vznikaji chyby, ktere se objevuji jen zridka} (spatne ladeni, tzv. race conditions) - vede to na vyuzivani technik pro \textbf{pokrocile testovani} (vkladani sumu - umele v nahodnych okamzicich se snazime programy zpozdit, enumerace prolozeni akci programu), \textbf{nastroje pro verifikaci s formalnimi zaklady} (staticka analyza, model checking). \\
+
+Mezi bezne pouzivane signaly patri:
+\begin{itemize}
+    \item SIGHUP - odpojeni, ukonceni terminalu,
+    \item SIGINT - preruseni z klavesnice (Ctrl+C),
+    \item SIGKILL - signal c.9, tvrde ukonceni
+    \item SIGSEV (mimo pridelenou pamet - spatny ukazatel),SIGBUS - chybna prace s pameti,
+    \item SIGPIPE - zapis do roury bez ctenare,
+    \item SIALRM - signal od casovace,
+    \item SIGTERM - mekke ukonceni (lze vyvratit),
+    \item SIGUSR1, SIGUSR2 - uzivatelske signaly (uzivatel si je muze nadefinovat)
+    \item SIGCHLD - pozastaveni ci ukonceni potomka,
+    \item SIGCONT - dochazi pri uvolneni z cekani,
+    \item SIGSTOP, SIGSTP (Ctrl+Z) - tvrde / mekke pozastaveni,
+    \item dalsi viz man 7 signal \\
+\end{itemize}
+
+\textbf{definice:}
+\textit{race conditions} jsou casove zavisle chyby (zavisi na tom, jak se v case na sobe nakladaji paralelni akce) \\
+
+\subsubsection{Predefinovani obsluhy signalu}
+Mezi implicitni reakce na signal patri \textbf{ukonceni procesu} (pripadne s generovani core dump), \textbf{ignorovani signalu, zmrazeni ci rozmrazeni procesu}. 
+
+Predefinovat obsluhu lze u vsech signalu \textbf{mimo SIGKILL, SIGSTOP}. U SIGCONT vzdy dojde k odblokovani procesu (a nasledne se provede preddefinovana akce). \\
+
+Vlastni predefinovani obsluhy:
+\begin{itemize}
+    \item pouziji se funkce signal (zakladni - jaky signal chci obsluhovat a jakou funkci, funkce ma jediny parametr - cislo signalu)
+    \item nebo sigaction (urci se jaka funkce bude obsluzna, moznst nastaveni blokovani signalu behem obsluhy, dalsi specialni rezimy, .. ) 
+    \item vice viz. man signal nebo man sigaction \\
+\end{itemize}
+
+Prednastavene konstanty:
+\begin{itemize}
+    \item SIG\_DFL - prednastaveny signal ma byt obsluhovan implicitnim zpusobem
+    \item SIG\_IGN - signal ma byt ignorovan \\
+\end{itemize}
+
+Z obsluzne funkce je mozne volat pouze bezpecne knihovni funkce. (viz. man 7 signal - na konci seznam funkci, ktere se mohou pouzit pri obsluze funkci) \\
+
+\subsubsection{Blokovani signalu}
+Je vhodne nastavit masku blokovani signalu, volani:
+\begin{itemize}
+    \item sigprocmask (rekneme jake nastaveni signalu menime),
+    \item pomoci SIG\_BLOCK (co chceme blokovat), SIG\_UNBLOCK (odblokovat), SIG\_SETMASK (natvrdo nastavit masku blokovanych signalu). \\
+\end{itemize}
+
+Blokovani se resi pomoci \textbf{bitovych masek}, ktere jsou typu sigset\_t. K vytvareni masek je mozne pouzit preddefinovana makra sigemptyset, sigfillset, segaddset, sigdelset. Nelze blokovat signaly \textbf{SIGKILL, SIGSTOP, SIGCONT}.
+
+\textbf{Nastaveni blokovani se dedi blokovani potomku} (proces si nastavi blokovani - fork - dedi to i potomci, pri execu obsluzne funkce zanikaji). Pokud chceme zjistit, zda nejake signaly cekaji, zavolame sigpending (preda se ukazatel na masku signalu). Pokud nejaky signal je zablokovan, ale prijde vicekrat, zapamtuje se jeho \textbf{vyskyt pouze 1x}. (neplati pro realtime signaly)
+
+\subsubsection{Zasilani signalu}
+Slouzi k tomu volani kill (s parametry pid - komu chceme signal poslat a cislo signalu, ktery zasilame). Umoznuje zasilat signaly:
+\begin{itemize}
+    \item jednomu konkrektnimu procesu (pid kladne),
+    \item skupine procesu (0 - ve skupine, ve ktere proces je),
+    \item vsem procesum, kterym proces muze signal poslat (pid = -1, nebo zapornejsi cislo - posle se dane skupine [-10] = vsem v skupine 10). \\
+\end{itemize}
+
+Aby mohl proces zaslat signal jinemu procesu, musi odpovidat \textbf{jeho UID, EUID ci saved set-user-ID ciloveho procesu} (nelze posilat signaly nekomu jinemu), pripadne se musi jednat o privilegovaneho odesilatele (napr. EUID=0, nebo CAP\_KILL).
+
+Muze se pouzit i sigqueue pro volani s realtime signaly.
+
+\subsubsection{Cekani na signal}
+Meli bychom na signaly cekat \textbf{pasivne} (nikoli se aktivne neustale dokola ptat, zda signal uz prisel). Budto:
+\begin{itemize}
+    \item jednoduche cekani pause,
+    \item obvykle lepsi zabezpecene cekani sigsuspend - je mozne specifikovat masku signalu, ktere maji byt blokovany po dobu cekani a atomicky prepnout mezi signaly jsou blokovany do zacatku cekani a od zacatku cekani (muze se stat, ze probehne test, zda prisel nejaky signal a zjisti se, ze neprisel - zacne se cekat a prijde mezi testem a zacatkem cekani - cekani do nekonecna) \\
+\end{itemize}
+
+\newpage
+
+\section{}
+\textbf{Desata prednaska:} Nove tema - synchronizace procesu.
+
+\subsection{}
 
 \end{document}
