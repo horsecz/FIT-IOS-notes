@@ -2770,8 +2770,6 @@ Provadeni locku a unlocku \textbf{musi byt atomicke} (jejich telo predstavuje ta
     \item vzajemnem vyloucenim s vyuzitim atomickych instrukci a aktivnim cekanim - s vyuzitim spinlocku (pouziva se u multiprocesorovych systemu, ceka se pouze na vstup do lock/unlock - kratkou dobu) \\
 \end{itemize}
 
-\newpage
-
 Pouzivaji se take:
 \begin{itemize}
     \item read-write zamky - pro cteni lze zamknout vicenasobne,
@@ -2779,6 +2777,15 @@ Pouzivaji se take:
     \item mutexy - binarni semafory, mohou byt odemknuty pouze tim, kdo ho zamkl
     \item futexy - rychle mutexy pouzivane v linuxu v user-space (pri detecti konfliktu se vola sluzba jadra) \\
 \end{itemize}
+
+\textbf{Implementace semaforu:}
+
+\begin{figure} [h]
+    \centering
+    \scalebox{2}{\includegraphics{10.6_1.jpg}}
+    \scalebox{2}{\includegraphics{10.6_2.jpg}}
+    \caption{prevzat z prezentace IOS: Synchronizace procesu - kod implementace semaforu}
+\end{figure}
 
 \newpage
 \section{}
