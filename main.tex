@@ -2622,7 +2622,166 @@ Meli bychom na signaly cekat \textbf{pasivne} (nikoli se aktivne neustale dokola
 
 \section{}
 \textbf{Desata prednaska:} Nove tema - synchronizace procesu.
+\subsection{Synchronizace procesu}
+Synchronizace slouzi k tomu, aby procesy si vzajemne \textbf{nekolidovali a nedochazelo v systemu k nekonzistentnim stavum (ci datum).} -- Aby pri behu procesu nedoslo ke nekonzistenci dat, pouziva se synchronizace procesu (zajistuje spravne poradi provadeni spolupracujicich procesu).
 
-\subsection{}
+Kdyz jadro dava \textbf{casove kvantum nejakemu procesu, tak to znamena, ze dava procesu nejaky casovac}, a kdyz dobehne, \textbf{spusti se preruseni}.
+
+\textbf{Race condition:} \\
+Casove zavisla chyba, ci race condition nebo soubeh, chyba, ktera muze vzniknout pri pristupu ke sdilenym zdrojum, datum - vznika pri pristupu ke zdilenym zdrojum kvuli ruznemu poradi provadeni jednotlivych paralelnich vypoctu v systemu. \\
+
+\subsection{Kriticke sekce}
+Jsou \textbf{useky kodu napric ruznymi procesy}, ve kterych \textbf{nesmi dojit k prepnuti kontextu} (nebo v nich nesmi byt nekolik procesu zaroven), \textbf{aby nedoslo k chybe soubehu dat}. (napr. vice procesu pracuje se stejnymi [globalnimi] promennymi) V programu muze byt \textbf{vice} kritickych sekci.
+
+Problemem kriticke sekce rozumime \textbf{problem zajisteni konkretni synchronizae procesu na mnozine sdilenych kritickych sekci}, coz zahrnuje:
+\begin{itemize}
+    \item vzajemne vylouceni - nanejvys 1 (ci k) procesu muze do kriticke sekce vstouput (nebo: nanejvys 1 proces je v danem okamziku v dane mnozine sdilenych kritickych sekci).
+    \item dostupnost kritickych sekci:
+    \item pokud je kriticka sekce volna, chceme do ni vstouput (nebo: opakovane volna v alespon urcitych okamzicich, proces nemuze neomezene cekat na pristup k ni),
+    \item je potreba se totiz vyhnout:
+    \begin{itemize}
+        \item uvaznuti (deadlock, viz nize a pozdeji),
+        \item blokovani (situace, kdy sdileny prostredek je volny, proces na nej ale musi dlouho cekat),
+        \item starnuti (hladoveni, proces se snazi vstoupit do kriticke sekce, ale nikdy k tomu nedojde, protoze ho planovac nikdy nevybere ve spravny okamzik). \\
+    \end{itemize}
+\end{itemize}
+
+\newpage
+
+\subsection{Problemy vznikajici na kriticke sekci}
+Data race - \textbf{dochazi k zavodu mezi daty} - situace kdy jsou treba dva pristupy ke zdroji s vylucnym pristupem ze dvou procesu bez synchronizace, alespon jeden pristup je zapis. Jedna se o:
+\begin{itemize}
+    \item Uvaznuti (deadlock) pri pristupu ke zdrojum s vylucnym (omezenym) pristupem rozumime situaci, kdy kazdy proces z urcite mnoziny procesu je pozastaven a ceka na uvolneni zdroje s vylucnym (omezenym) pristupem vlastneneho nejakym procesem z dane mnoziny, ktery jediny muze teto zdroj uvolnit,
+    \item Livelock - specialni pripad starnuti - dochazi k tomu s tim, ze procesy vykonavaji nejakou cinnost, ale nikdy se nedostanou k tomu, aby udelali co chteli (nikdy nedojde ke vstupu do kriticke sekce),
+    \item Blokovani pri pristupu do kriticke sekce je situace, kdy proces, jenz zada o vstup do kriticke sekce musi cekat, prestoze je prestoze je kriticka sekce volna a ani o zadnou z dane mnoziny sdilenych kritickych sekci zadny dalsi proces nezada,
+    \item Starnuti je situace, kdy proces ceka na podminku, ktera nemusi nastat - v pripade kriticke sekce je touto podminkou umozneni vstupu do kriticke sekce \\
+\end{itemize}
+
+\subsection{Zpusoby reseni problemu kriticke sekce}
+Musi dojit k \textbf{vzajemnemu vylouceni} (nesmi dojit k data race) a musi zajistovat \textbf{dostupnost kriticke sekce} (minimalne nesmi dojit k deadlocku) a zaroven synchronizacni prostredky musi byt efektivni.
+
+\textbf{Petersonuv algoritmus (kratky popis):}
+\begin{itemize}
+    \item omezen pro 2 procesy (existuji i rozsireni pro vice procesu),
+    \item resi sync kritiske sekce bez hardwaru,
+    \item nebere ohled na to, jaka ta kriticka sekce je,
+    \item v kriticke sekci muze byt maximalne 1 proces,
+    \item procesy o sobe vzajemne nevi (nevi co druhy proces dela, pouze vedi, ze druhy proce existuje),
+    \item pracuje s sdilenymi polemi booleovskych promennych (init false, false) a sdilenou promennou turn = 0,
+    \item pole nam rika, ktery z procesu chce pristoupit do kriticke sekce,
+    \item turn nam rika, kdo je zrovna na tahu (pred vstupem do kriticke sekce),
+    \item prvni proces chce pristoupit do kriticke sekce - nastavi turn na 1 - i (i je index v bool poli), na tahu je druhy proces,
+    \item zacne se provadet prazdny cyklus (dokud je nastaven flag 1 - i a zaroven je na tahu ten druhy proces - cykli),
+    \item proces 1 provede kritickou sekcu a nastavi svuj bool na false \\
+\end{itemize}
+
+\textbf{Bakery algoritmus L. Lamporta:}
+\begin{itemize}
+    \item vylouceni pro n procesu (n znam dopredu),
+    \item prijdes do pekarstvi (nebo spis na postu), vezmete si listek s cislem a cekas, az na tebe dojde rada,
+    \item pred vstupem do kriticke sekce ziiska proces pristupovy listek, jehoz hodnota je vetsi nez cisla pridelena jiz cekajicim procesum,
+    \item pracuje s sdilenym booleovskym pole priznaku (jestli hledam hodnotu maximalniho ticketu), sdilenym int hodnoty ticketu a lokalnimi int hodnotami,
+    \item v prvni fazi se snazi algoritmus zjistit, jake je nejvetsi cislo tiketu a pote si vzit ticket s hodnotou maximum+1 vice,
+    \item dva (nebo) vice procesu muze mit stejnou hodnotu ticketu,
+    \item pote se nastavi bool na false,
+    \item ve druhe fazi proces ceka, az bude na nej rada,
+    \item nejprve pockam, az jiny proces (od 0) dohleda svoje maximum,
+    \item pote se ceka, az bude na me rada (ticket kladny, ostatni procesy nebudou chtit pristoupit do kriticke sekce),
+    \item az proces projde do kriticke sekce, hodnota jeho ticketu se nastavi na 0,
+    \item v okamziku, kdy maji procesy stejne cislo ticketu, prednost ma proces s nizsim cislem procesu (PID),
+    \item jednim problemem algoritmu je neustale zvysovani cisel (nutnost si davat pozor na preteceni) \\
+\end{itemize}
+
+Ani jeden z predeslych algoritmu nemusi na dnesnich CPU fungovat, protoze jsou \textbf{silne zavisle na poradi pristupu do pameti}. \\
+
+\newpage
+
+\subsection{Vyuziti atomickych instrukci pro synchroniaci}
+Pouzivaji se spise tyto instrukce. Jsou zalozeny na vyuziti instrukci, jejich atomicita je zajistena hw.
+
+\textbf{TestAndSet:}
+\begin{itemize}
+    \item v intelu lock bts, atomicka instrukce,
+    \item lze si ji predstavit jako funkci co vraci bool a potrebuje odkaz na typ target (bool),
+    \item nejdriv si ulozi to co je v pameti do pomocne promenne,
+    \item pote na misto pameti ulozi true, 
+    \item vrati co tam bylo predtim (puvodni hodnotu),
+    \item pri synchronizaci se to da vyuzit napriklad tak, 
+    \item ze proces ceka, az na danem pametovem miste bude hodnota false,
+    \item projde do kriticke sekce,
+    \item nastavi promennou na false a muze do ni pristoupit nekdo jiny,
+    \item kriticka sekce je chranena tzv. zamkem \\
+\end{itemize}
+
+\textbf{Swap:}
+\begin{itemize}
+    \item v intelu lock a xchg, atomicka instrukce,
+    \item nic nevraci, vymeni atomicky hodnoty ve dvou mistech v pameti,
+    \item pri syncu se da vyuzit tak, ze se zamkne kriticka sekce prohozenim hodnot dvou promennych,
+    \item vstoupime do kriticke sekce, a pote zamek odemkneme \\
+\end{itemize}
+
+Uvedena reseni zahrnuji moznost \textbf{aktivniho cekani}, a proto se take oznacuji casto jako \textbf{spinlock} (neustale se toci dokola a ptaji se na platnost podminky). Obecne jsou prilis drahe - procesy provadeji neuzitecny kod, pouze berou CPU cas. 
+
+Lze je vsak vyuzit \textbf{na kratkych, neblokujicich kritickych sekcich bez preemce} (tam kde neni prepnuti CPU).
+
+Pristup do pameti (RAM) od CPU trva kolem 100-150 instrukci. Opakovany zapis sdileneho pametoveho miste je problematicky z hlediska \textbf{zajisteni konzistence cache v multicpu systemech} (zatezuje se sdilena pametova sbernice) - resenim je pri aktivnim cekani \textbf{pouze cist}.
+
+\textbf{definice:} \\[0.5em]
+\textit{atomicka instrukce} je instrukce, u ktere je garantovano, ze je atomicka \\[0.2em]
+\textit{atomicita instrukce} zn., ze instrukce nemuze byt prerusena \\[0.2em]
+\textit{prazdny while (sync)} - aktivni cekani \\
+
+\newpage
+
+\subsection{Semafory}
+Synchronizacni nastroj nevyzadujici aktivni cekani (nebo alespon minimalizujici - muze se vyskytnout uvnitr implementace operaci nad semaforem). Jedna se o \textbf{celociselnou promennou prostupnout dvemi zakladnimi atomickymi operacemi} (hodnota = kolik procesu do nej jeste muze vstoupit):
+\begin{itemize}
+    \item lock - zamknuti semaforu, proces vstoupi do kriticke sekce a ostatni budou uspany,
+    \item unlock - odemknuti semaforu - jine procesy se probudi a vstoupi do kriticke sekce. \\
+\end{itemize}
+
+Dale je mozne mit rozsireni semaforu o:
+\begin{itemize}
+    \item neblokujici zamknuti - pokud je mozne zamknout semafor, tak se to provede, jinak se nebude cekat a provede se jina akce,
+    \item zamknuti s horni mezi na dobu cekani - maximalni cekaci doba (pote se proces probudi a bude delat neco jine),
+    \item soucasne zamknuti vice semaforu \\
+\end{itemize}
+
+Zabezpecuje sdileny pristup do kriticke sekce tak, ze \textbf{cekajici procesy uspi} (misto aktivniho cekani) a po uvolneni jej opet probudi. (Pozn.: \textbf{poradi pristupu procesu neni garantovano} (tzn. po uspani procesu se netvori fronta, ale spise nejaka mnozina procesu))
+
+Semantika celociselne promenne S - semaforu:
+\begin{itemize}
+    \item S je kladne - odemknuto (kolik procesu jeste muze pristoupit do kriticke sekce),
+    \item S je zaporne - zamknuto (absoultni hodnota S udava pocet cekajicich procesu) \\
+\end{itemize}
+
+\textbf{Prace se semafory:}
+\begin{itemize}
+    \item vytvoreni promenne typu semaphore (sdileny semafor),
+    \item inicializace semaforu,
+    \item pred vstupem do kriticke sekce zamek semaforu,
+    \item po vstupu z kriticke sekce odemceni semaforu \\
+\end{itemize}
+
+Provadeni locku a unlocku \textbf{musi byt atomicke} (jejich telo predstavuje taky kritickou sekci). Atomicita lock a unlock se resi:
+\begin{itemize}
+    \item zakazem preruseni,
+    \item vzajemnem vyloucenim s vyuzitim atomickych instrukci a aktivnim cekanim - s vyuzitim spinlocku (pouziva se u multiprocesorovych systemu, ceka se pouze na vstup do lock/unlock - kratkou dobu) \\
+\end{itemize}
+
+\newpage
+
+Pouzivaji se take:
+\begin{itemize}
+    \item read-write zamky - pro cteni lze zamknout vicenasobne,
+    \item reentrantni zamky - stejny zamek muze proces zamknout vicekrat,
+    \item mutexy - binarni semafory, mohou byt odemknuty pouze tim, kdo ho zamkl
+    \item futexy - rychle mutexy pouzivane v linuxu v user-space (pri detecti konfliktu se vola sluzba jadra) \\
+\end{itemize}
+
+\newpage
+\section{}
+TUDU
 
 \end{document}
