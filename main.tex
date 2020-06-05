@@ -2778,7 +2778,10 @@ Pouzivaji se take:
     \item futexy - rychle mutexy pouzivane v linuxu v user-space (pri detecti konfliktu se vola sluzba jadra) \\
 \end{itemize}
 
-\textbf{Implementace semaforu:}
+\textbf{Implementace semaforu:} \\
+Implementace semaforu (konkretne lock a unlock) tvori dalsi kriticke sekce, ktere se take musi zabezpecit (zamknout) \textbf{jinym synchronizacnim prostredkem}. Pouziva se spinlock na zacatku obou funkci, nasledne odemknuti spinlocku pred switchem, po ifu else a provedeni odemknuti. 
+
+U zkousky se implementuje semafor doplneny o kod spinlocku (TestAndSet nebo swap). Zde spinlock (na zacatku) pouze chrani kritickou sekci lock a unlock - aktivni cekani se zde da tolerovat. \\
 
 \begin{figure} [h]
     \centering
@@ -2789,6 +2792,429 @@ Pouzivaji se take:
 
 \newpage
 \section{}
+\textbf{Jedenacta prednaska:} Pokracovani a dokonceni synchronizace procesu, monitory, deadlock
+
+\subsection{Monitory}
+Synchronizacni prostredky (jeste) vyssi urovne (nez semafory). Problem semaforu v realnem kodu je, ze \textbf{je zde spousta sdilenych dat, ktere se budou vzajemne vylucovat} - nechceme mit cely program zamkly - bude zde snaha zamknuti minimalizovat - muze se stat, ze se nekde v nejake vetvi \textbf{zapomene lock/unlock a nastane problem} (v realnem kodu tak semafory jednoduche nejsou).
+
+Proto vznikl komfortnejsi synchronizacni mechanismus - monitory. V systakticke podobe vypadaji takto (jazyk Ada, bezne se takto nepouzivaji):
+
+\begin{figure} [h]
+    \centering
+    \scalebox{2}{\includegraphics{11.1_1.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - kod monitoru}
+\end{figure}
+
+\textbf{Monitor:}
+\begin{itemize}
+    \item je mozne si predstavit jako datovou strukturu podobne tride se sdilenymi promennymi,
+    \item ty jsou sdileny ruznymi procesy pracujici s monitorem,
+    \item procesy se mohou k promennym dostat pres procedury (metody monitoru),
+    \item automaticky monitor zajistuje, ze v danem okamziku pobezi na nem nejvyse 1 metoda,
+    \item kdokoli chce pracovat se sdilenymi zdroji, musi pouzivat tyto metody a zde se automaticky zajisti zamek/odemknuti zdroju,
+    \item pouziti - do monitoru se nadefinuji sdilene zdroje, dale mechanismy, jak se k nim ma pracovat (procedury), dale konstruktor (inicializacni kod) \\
+\end{itemize}
+
+\newpage
+
+\textbf{Popis monitoru:}
+\begin{itemize}
+    \item slupka (okraje) predstavuji ochrannou barieru monitoru,
+    \item do monitoru je mozne vstoupit definovanymi operacemi  (dvere),
+    \item pokazde kdyz do monitoru nekdo vstoupi, tak se dvere uzamcou.
+    \item dalsi "zajemci" o vstup jsou zarazeni do cekaci fronty vne monitoru (zarazovani tim, ze volaji dane operace v okamziku zamknuteho monitoru),
+    \item pokud se chteji synchronizovat, pouziji bud preddefinovane podminky programatorem, s kazdou z tech podminek se poji dalsi cekaci fronta (chci se sync pomoci podminky x - wait\_x() - zarazeni do fronty x - soucasne bude vybran nekdo, kdo ceka na vstup monitoru a bude moznost v nem bezet - ja cekam ve fronte x na nekoho, kdo se do monitoru dostane a provede signal ci notify - muze me uvolnit z fronty x) \\
+\end{itemize}
+
+\begin{figure} [h]
+    \centering
+    \scalebox{2}{\includegraphics{11.1_2.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - graficke ztvarneni monitoru}
+\end{figure}
+
+\textbf{Co kdyz se procesy chteji synchronizovat uvnitr monitoru?}
+\begin{itemize}
+    \item pouzivaji se mechanismus podminek - conditions,
+    \item specialni datova struktura, s definovanymi operacemi nad ni, pomoci nich se procesy synchronizuji,
+    \item je mozne volat wait() - synchronizovat se s nekym na nejake podmince,
+    \item je mozne nekomu kdo na podmince ceka poslat uvolnujici signal (operace signal() nebo notify())
+\end{itemize}
+
+\textbf{Rozliseni signal a notify:}
+\begin{itemize}
+    \item v monitoru muze bezet jen jeden proces,
+    \item pokud v nem jsou dva (z toho jeden ve fronte dane podminky [napr. proces ve fronte x, druhy v monitoru a vola signal/notify]
+    \item signal() - po zavolani pokracuje ten, kdo signal dostane (ten kdo je ve fronte [x]) a bezi v monitoru, druhy proces se zaradi bud do cekaci fronty ci se zaradi do dalsi fronty uvnitr monitoru, kde takoveto procesy cekaji (a maji prednost pred procesy ve fronte venku)
+    \item notify() - po zavolani pokracuje volajici, resp ten kdo signal dostal (ten co byl ve fronte se presune bud do fronty mimo monitor ci do jine fronty uvolnenych procesu ale cekajicich)
+    \item ceka se, az bude proces odejde z monitoru nebo zacne cekat (zaradi se do fronty podminky)
+    \item pokud nikdo na podmince neceka a nekdo na ni pouzije signal ci notify, jedna se o prazdnou operaci (nic se neprovede) \\
+\end{itemize}
+
+Monitory je mozne implementovat \textbf{s vyuzitim semaforu} (vstupni semafory, semafory ke kazde podmince, pro prioritni procesy - pozastavene procesy ve fronte uvnitr monitoru). Monitory jsou dostupne v Jave ci C\#. V POSIXu (C, C++, ..), jsou k dispozici alespon podminky (kombinace semaforu a podminek) - pthread\_cont\_t a funkce pthread\_cond\_wait / signal / broadcast. \\
+
+\newpage
+
+\subsection{(Nektere) Klasicke synchronizacni problemy}
+\subsubsection{Problem producenta a konzumenta}
+\begin{itemize}
+    \item mame smecku procesu, predem rozdeleny, ci se dynamicky deli na producenty a konzumenty, komunikuji spolu pres vyrovnavaci pamet (napr. pole s kruhovym bufferem),
+    \item nutne procesy synchronizovat pro spravnou praci s pameti,
+    \item resenim jsou tri semafory (full, empty, mutex),
+    \item full - rika kolik polozek je aktualne v cache k dispozici, zamykanim si rezervuji polozku v pameti ke spotrebe,
+    \item empty - rika kolik je volnych slotu v cache, zamykanim se rezervuje kapacita pro zapis do cache,
+    \item mutex - pomocny semafor, ktery se zamkne pri praci s ukazovatky do cache,
+    \item \textbf{semafory je nutne vhodne inicializovat} (full=0, empty=max. hodnota cache, mutex=1) \\
+\end{itemize}
+
+\begin{figure} [h]
+    \centering
+    \scalebox{2}{\includegraphics{11.2.1_1.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - sync prostredky producentu a konzumentu}
+\end{figure}
+
+\newpage
+
+\textbf{Pseudokod producenta:}
+\begin{itemize}
+    \item pracuji tak, ze vyprodukuji polozku, kterou chteji zapsat do cache,
+    \item nejprve zamknou empty (pokud se to podari - je tam volne misto a rezervuji si ho pro sebe),
+    \item zamknou mutex,
+    \item zacnou zapisovat do cache (posunou ukazovatko),
+    \item odemkne se pristup do cache - odemknuti mutex a full (konzumentum se da najevo, ze je zde polozka ke konzumaci),
+    \item pracuje v nekonecnem cyklu do while 1 \\
+\end{itemize}
+
+\textbf{Pseudokod konzumenta:}
+\begin{itemize}
+    \item nejprve zamknou full (pri uspechu - ve vyrovnavaci pameti je neco ke konzumaci, polozku si alokovali),
+    \item zamknou si pristup k cache (zamkne se mutex),
+    \item z vyrovnavaci pameti se odstrani 1 polozka,
+    \item odemkne se pristup k cache (mutex) a nasledne se odemkne empty (da se najevo producentum, ze se v cache uvolnila polozka),
+    \item zkonzumuje se polozka,
+    \item pracuje v nekonecnem cykly do while 1 \\
+\end{itemize}
+
+\begin{figure} [h]
+    \centering
+    \scalebox{2}{\includegraphics{11.2.1_2.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - pseudokod producenta a konzumenta}
+\end{figure}
+
+\newpage
+
+\subsubsection{Problem ctenaru a pisaru}
+\begin{itemize}
+    \item dva typy procesu - ctenari a pisari,
+    \item pracuji se sdilenou pameti - ctenari ji mohou pouze cist, pisari jen menit,
+    \item muze soucasne cist libovolny pocet ctenaru (nemeni se obsah pameti),
+    \item pokud nejaky pisar, nesmi nikdo ani cist, ani psat,
+    \item pouzva se sdilena promenna readcount - pocet ctenaru,
+    \item nutne pouzit semafor mutex (chranici pristup k readcout) a semafor wrt (semafor pisaru),
+    \item opet je nutna inicializace (pocet ctenaru=0, oba semafory=1) \\
+\end{itemize}
+
+\begin{figure} [ht]
+    \centering
+    \scalebox{2}{\includegraphics{11.2.2_1.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - sync prostredky ctenaru a pisaru}
+\end{figure}
+
+\textbf{Pseudokod pisare:}
+\begin{itemize}
+    \item pokud chce zapisovat zamkne semafor wrt,
+    \item az se mu to poradi, zapisuje,
+    \item po dopsani odemkne wrt,
+    \item pracuje v do while 1 cyklu \\
+\end{itemize}
+
+\textbf{Pseudokod ctenare:}
+\begin{itemize}
+    \item v okamziku kdyz chce cist,
+    \item je nutne zamknout pristup k promenne readcount (mutex), pote ji inkrementovat (zjisti tak, jestli je prvni),
+    \item pokud readcout==1, tak se jedna o prvniho ctenare,
+    \item potom se zamkne wrt a odemkne se mutex (readcount),
+    \item zacne cist (pokud prijde dalsi ctenar, pouze readcount inkrementuje a cte),
+    \item jakmile ctenar docte, zamkne mutex,
+    \item dekrementuje se readcount, pokd je ==0, znamena to, ze je poslednim ctenarem a musi odemknout pristup pisarum (wrt),
+    \item odemkne se pristup k readcount (mutex),
+    \item pracuje v do while 1 cyklu \\
+\end{itemize}
+
+\begin{figure} [ht]
+    \centering
+    \scalebox{2}{\includegraphics{11.2.2_2.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - pseudokod ctenaru a pisaru}
+\end{figure}
+
+Toto reseni ma nevyhodu - \textbf{hrozi vyhladoveni pisaru} - pokud do kriticke sekce vejde 1 ctenar, prijde pisar a zacne cekat, prijde dalsi ctenare, vejde do kriticke sekce, prvni odejde, druhy taky, ale opet vejde prvni ctenar - do nekonecna se tu stridaji a pisar nikdy nezapise. Vyhladoveni je nekdy tolerovano, ale je dobre se mu vyhnout (mala pravdepodobnost, ze ctenari se budou do nekonecna stridat).
+
+\textbf{Reseni vyhladoveni:}
+\begin{itemize}
+    \item pouzije se dalsi semafor - wrt\_waiting - cekajici pisar,
+    \item pisar nejprve zamkne wrt\_waiting, pote wrt, po zamknuti wrt odemkne wrt\_waiting,
+    \item ctenari na zacatku provedou lock wrt\_waiting, unlock wrt\_waiting a pote pokracuji dal (zajisti, ze pokud nejaky pisar zacne cekat, tak vsichni ctenari doctou, a po navratu na zacatek nebudou schopni provest lock unlock) \\
+\end{itemize}
+
+\newpage
+
+\subsubsection{Problem vecericich filozofu}
+\begin{itemize}
+    \item 5 filozofu, kteri reprezentuji procesy,
+    \item sesednou se kolem kulateho stolu, kteri budou jist a debatovat, jedi pomoci asijskych hulek, ktere budou mit rozdeleny tak, ze mezi kazdymi filosofy je jedna hulka (ji se dvema..) - 5 hulek pro 5 filozoru,
+    \item cyklus: ziska si svoji levou a pravou hulku, muze se najist, polozi hulky zpet, premysli, pote opet ji,
+    \item reprezentuje situaci, kdy mezi synchronizovanymi procesy je cyklicka zavislost \\
+\end{itemize}
+
+\textbf{Moznost reseni:}
+\begin{itemize}
+    \item ne dokonale reseni, moznost uvaznuti (=spatne) a
+    \item je mozne, ze dva filosofove budou jist soucasne 1 hulkou,
+    \item zavede se 5 binarnich semaforu (pole semaforu),
+    \item vsechny inicializovane tak, ze jsou odemknute \\
+\end{itemize}
+
+\textbf{Filozof I:}
+\begin{itemize}
+    \item i = ID, hodnota 0-4,
+    \item zamkne hulku i, nasledne zamkne hulku i+1 modulo 5,
+    \item pokud se podari zamek obou hulek, naji se,
+    \item nasledne odemkne obe hulky,
+    \item muze premyslet,
+    \item do while 1 cyklus \\
+\end{itemize}
+
+\begin{figure} [htb]
+    \centering
+    \scalebox{1.6}{\includegraphics{11.2.3.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - pseudokod reseni tohoto problemu}
+\end{figure}
+
+\newpage
+
+\textbf{Gde deadlock?}
+\begin{itemize}
+    \item procesy za planovani se mohou naskladat tak,
+    \item ze kazdy si vezmne svoji svoji levou hulku (kazdy hulku se stejnym cislem jako jeho cislo 4-4, 0-0),
+    \item nasledne si kazdy z nich bude chtit ziskat tu druhou,
+    \item bude kazdy trvat na tom, ze si svoji necha a chce tu druhou,
+    \item cely system se zastavi - deadlock \\
+\end{itemize}
+
+\textbf{Reseni deadlocku zde:}
+\begin{itemize}
+    \item jednou z moznosti je ziskavat obe hulky soucasne,
+    \item napr. pomoci semaforu system 5, umoznuji zamknout pole semaforu,
+    \item dalsi moznosti je ziskavat hulky asymetricky - alespon 1 z filozofu bude brat hulky v obracenem poradi (napr. kazdy lichy filozof bude brat hulky nejprve i a pote i+1 modulo 5 a sudi nejprve i+1 modulo 5 a potom i) \\
+\end{itemize}
+
+\newpage
+
+\subsection{Deadlock (uvaznuti)}
+\subsubsection{Definice}
+\textbf{\textit{Uvaznutim (deadlockem) pri pristupu ke zdrojum s vylucnym (omezenym) pristupem rozumime situaci, kdy kazdy proces z nejake neprazdne mnoziny procesu je pozastaven a ceka na uvolneni nejakeho zdroje s vylucnym (omezenym) pristupem vlastneneho nejakym procesem z dane mnoziny, ktery jediny muze tento zdroj uvolnit, a to az po dokonceni jeho pouziti.}}
+
+\textbf{Vysvetleni definice:}
+\begin{itemize}
+    \item je specialni pripad deadlocku,
+    \item neprazdna mnozina procesu = 1, 2, 1000, ... ne 0! - pouzivame tuto definici, jine pouzivaji mnozinu procesu kde je jich alespon 2,
+    \item vylucny pristup = zdroj, ktery pouziva v danem okamziku nanejvys 1 proces,
+    \item omezeny pristup = zobecnene kriticke sekce, kde zdroj muze pouzivat urcity pocet procesu, ale ne neomezeny pocet,
+    \item pozastaven = neni tam aktivni cekani, nebezi (pokud to tam nebude, nebylo by mozne rozlisit deadlock a livelock),
+    \item zdroj vlastneny nejakym procesem z dane mnoziny = obvykle jiny, muze to byt i stejny proces,
+    \item jediny ... po dokonceni jeho pouziti = pracujeme s tim, ze se pouziva zamek, ktery se pouziva neomezene (zadny casovy zamek), nikdo nemuze zdroj vzit, odemknout, nikde neni zadny casovac,
+    \item kardinalita-pocet procesu mnoziny procesu=1 - tzv. self deadlock - proces zamkne zdroj a pak ho pokusi zamknout jeste jednou (doublelocking) \\
+\end{itemize}
+
+\textbf{Obecnejsi definice:} (s moznosti uvaznuti i bez prostredku s vylucnym pristupem - napr. zasilani zprav): \\
+Uvaznutim rozumime situaci, kdy kazdy proces z nejake neprazdne mnoziny procesu je pozastaven a ceka na nejakou udalost, ktera by mohla nastat pouze tehdy, pokud by mohl pokracovat nektery z procesu z dane mnoziny. (je to napr. situace kdy proces 1 ceka na zpravu od procesu 2, ten ceka na zpravu od 3, 3 ceka na 4, ... proces 5 ceka na zpravu od 1 - obecnejsi uvaznuti)
+
+
+\subsubsection{Typicky priklad deadlocku}
+\begin{itemize}
+    \item pri pristupu ke zdrojum s vylucnym omezenym pristupem,
+    \item v praxi mohou byt jednotliva volani ve zdrojaku velmi daleko od sebe a zamykany mohou byt jen za urcitych podminek,
+    \item uvaznuti se tak projevi jen zridka a spatne se odaluje \\
+\end{itemize}
+
+\newpage
+
+\begin{figure} [htb]
+    \centering
+    \scalebox{2}{\includegraphics{11.3.jpg}}
+    \caption{z prezentace IOS: Synchronizace procesu - priklad uvaznuti}
+\end{figure}
+
+\textbf{Popis (kodu):}
+\begin{itemize}
+    \item dva semafory, oba na zacatku odemknute,
+    \item za predpokladu pouziti standardnich semaforu se standardni semantikou, neni zde jadro, ktere napr. hlida situaci a jeden z procesu by zabilo, ..
+    \item jeden proces zamkne prvni mutex, neco provede, pokusi se zamknout druhy,
+    \item druhy proces zamkne druhy mutex, neco provede a zamkne prvni,
+    \item nastane deadlock \\
+\end{itemize}
+
+\subsubsection{Coffmanovy podminky}
+Rozvadi to, co je obsahem uvaznuti do 4 nutnych a postacujicich podminek, ktere jsou zapotrebi pro uvaznuti. 
+
+\textbf{K tomu aby uvaznuti mohlo nastat je nutne ci postacuji nasledujici podminky:}
+\begin{itemize}
+    \item vzajemne vylouceni pri pouzivani prostredku,
+    \item vlastnictvi alespon 1 zdroje, pozastaveni a cekani na dalsi,
+    \item prostredky vraci (pouze) ten proces, ktery jej vlastni a to po dokonceni jejich vyuziti (zdroj je vlastnen procesem, pouze ten proces ho muze vratit a to po dokonceni vyuziti toho zdroje),
+    \item cyklicka zavislost na sebe (navzajem) cekajicich procesu (rozumi se tim to, ze jeden proces ceka na druheho - zadne aktivni cekani v cyklu) \\
+\end{itemize}
+
+\subsubsection{Reseni uvaznuti}
+\begin{itemize}
+    \item prevence uvaznuti,
+    \item vyhybani se uvaznuti,
+    \item detekce a zotaveni \\
+\end{itemize}
+
+Zakladni spolecna myslenka vsech reseni je \textbf{princip, kterym se snazi zrusit platnost alespon jedne z nutnych podminek k uvaznuti} (Coffmanovych podminek - kdyz se jedna zneplatni - nemuze dojit k uvaznuti). \\
+
+\subsubsection{Prevence uvaznuti}
+\textbf{Resi, jak tyto podminky zneplatnit:}
+\begin{itemize}
+    \item prvni (vylouceni)
+    \begin{itemize}
+        \item nepouzivat zadne sdilene prostredky nebo uzivat sdilene prostredky,
+        \item ale pouze takove, ktere umoznuji skutecne soucasny sdileny pristup
+        \item a u kterych neni nutne vzajemne vylouceni procesu (ne vzdy problem pujde vyresit timto zpusobem),
+    \end{itemize}
+    \item druha (vlastnictvi)
+    \begin{itemize}
+        \item proces muze zadat o prostredky pouze tehdy, pokud zadne nevlastni,
+        \item (kdyz chce proces pouzivat soucasne 5 zdroju v jednom okamziku, musi zamknout vsechny soucasne - ziska nebo ceka - systematicky v kodu zamkykam vsechny nebo zadny zdroj - kontrola zamku: pokud proces jiz neco zamkl, nemuze znovu zamykat - musi vse uvolnit a pote muze zamknout),
+        \item nevyhodou je nutnost zamknuti vsech zdroju, ktere se pouzivaji soucasne (napr. 30 min se pouziva 1 zdroj, pote 1 min se pouziva dalsi zdroj soucasne s prvnim - musi se zamknout na 30 min oba zdroje),
+    \end{itemize}
+    \item treti (navrat)
+    \begin{itemize}
+        \item nebudu vyzadovat, aby proces vzdy ziskal vsechny zdroje, ktere chce pouzivat soucasne v 1 okamzik,
+        \item ale umoznim mu ziskavat postupne dalsi a dalsi zdroje, postupne prizamykat tyto zdoje,
+        \item ale jen v situaci, kdy je opravdu mozne tyto zdroje ziskat,
+        \item pokud se proces pokusi neco prizamknout a ono se to nepovede, bude to reseno specialnim zpusobem
+        \item (napr. tak, ze proces bude zabit a vsechny zdroje mu budou odebrany),
+        \item nevyhodou je situace, kdy v okamziku kdy se proces zabije, uz mohl s nekterymi zdroji neco delat, zdroje mohou byt v nekonzistentnim stavu (idealne se pokust vratit zdroje do konzistentniho stavu),
+    \end{itemize}
+    \item ctvrta (cyklicka zavislost)
+    \begin{itemize}
+        \item zavedenim usporadanim nad zdroji (ocislovani),
+        \item je mozne tyto zdroje ziskavat pouze od urciteho poradi (napr. od nejmensiho k nejvetsimu - zacnu 1, pak 2, pak 3, .. - pokud zamknu 5, muzu zamknout 5+, ale 3 uz ne), 
+        \item bud se konstrukci programu zajisti, aby se vzdy zamykalo v tomto poradi, a pote analyzou, auditem se overi, zda opravdu ma program takovou zamykaci disciplinu,
+        \item anebo budu mit system zamykani, ktery toto bude kontrolovat \\
+    \end{itemize}
+\end{itemize}
+
+Ke vsem bodum se da rict, ze bud bude program navrhovan tak, aby byl konformni s pouzitou strategii nebo se vynuceni stragie kontrolovat az pri behu. \\
+
+\subsubsection{Vyhybani se uvaznuti}
+Dalo by se to se chapat jako prevence 4. Coffmanovy podminky. \textbf{Obecny princip:}
+\begin{itemize}
+    \item procesy musi predem deklarovat (jadru, systemu zpravy zdroju) informace o tom, jake zdroje a jak budou pouzivat, resp. ktere zdroje se budou pouzivat a kolik jednotek zdroje se bude pouzivat - nejjedoduseji musi kazdy proces rict, kolik jednotek ktereho zdroje bude pouzivat (dalsi informace napr. budu pouzivat zdroje 1 2 3 4, nikdy nebudu pouzivat soucasne 1 a 2, apod.),
+    \item nasledne system pridelovani zdroju si vede informace co ty procesy deklarovaly,
+    \item o jejich moznych pozadavcich,
+    \item soucasne si vede o aktualnim stavu pridelovani (vi kdo co vlastni a kdo o co pozadal),
+    \item v okamziku kdy system ma neuspokojene zadosti, ty uspokoji tehdy, pokud nemuze vzniknout zadna cyklicka zavislost na sebe cekajicich procesu, ani v tom nejhorsim moznem pripadu, ktery by mohl nastat s ohledem na to, co procesy deklarovaly \\
+\end{itemize}
+
+\textbf{Priklad:}
+\begin{itemize}
+    \item situace v bance,
+    \item od klientu mam sverene penize na terminovane vklady, vim kdy si klienti mohou sve vklady vybrat,
+    \item prijde nekdo a bude chtit pujcku,
+    \item je nutne se zamyslet kolik zdroju mam a kdy si to klienti mohou vybrat,
+    \item pujcu mohu dat jen tehdy, kdyz v nejhorsim moznem pripade (vsichni klienti si pujdou vybrat co mohou) se nedostanu do dluhu,
+    \item mohu penize pujcit \\
+\end{itemize}
+
+\textbf{Algoritmus zalozeny na grafu alokace zdroju:}
+\begin{itemize}
+    \item resi problem vyhybani se uvaznuti,
+    \item pro pripad binarnich zdroju,
+    \item je veden systemem, ktery zdroje prideluje, ten si prubezne udrzuje graf vztahu mezi procesy a zdroji - dva typy uzlu (procesy a zdroje) a tri typy hran - hrany od zdroje k procesu (ktery zdroj je kym vlastnen, zvyraznena, "tucna" hrana), hrany Pi a Ri od procesu ke zdroji (kdo o ktery proces zada), Pi a Ri od procesu ke zdroji (kdo o ktery zdroj muze pozadat - zvyraznena hrana, "tucna")
+    \item zdroj system pridely pouze tehdy, pokud posoudi, ze v budoucnu nemuze nastat cyklicka zavislost procesu, jednoduse tim, ze "cvicne" provede otoceni zadosti na hranu vlastnictvi (z P2 do R2 udela R2 do P2), pokud v te situaci vznikne v grafu cyklus, znamena to, ze v budoucnu by mohl vzniknout deadlock,
+    \item v takovem okamziku system nepovoli prideleni zdroje (proces bude muset dal cekal na uvolneni zdroje, i kdyz je volny) \\
+\end{itemize}
+
+Pokud by se pouzivaly obecne zdroje se zobecnenou kapacitou, pouzil by se tzv. bankeruv algoritmus. \\
+
+\subsubsection{Detecke uvaznuti a zotaveni}
+System pridelovani zdroji \textbf{umozni pripadny vznik uvaznuti} (pokud pomineme to, ze externe k mnozine uvaznutych procesu mame "strazneho andela", ktery uvaznuti vyresi), \textbf{ale periodicky} (bezi specialni proces, zajistujici ze nebude prebit prioritami jinych procesu) \textbf{se detekuje, jestli k uvaznuti nedoslo}, a pokud ano, provede se zotaveni.
+
+\textbf{Detekce uvaznuti:}
+\begin{itemize}
+    \item vedeni grafu vlastnictvi zdroju a cekani na zdroje (obdobny jak u vyhybani se uvaznuti) - stejny pocet uzlu, 2 typy hran (nekdo zada o zdroj, nekdo vlastni zdroj),
+    \item pokud vznikne v grafu cyklus, vim, ze uvaznuti nastalo \\
+\end{itemize}
+
+\textbf{Zotaveni z uvaznuti:}
+\begin{itemize}
+    \item alespon nekterym procesum, ktere uvazly, odeberu zdroje,
+    \item proces se bud zrusi pozastavi se s tim, ze muze pokracovat, az bude moci ziskat vsechny zdroje, ktere potrebuje,
+    \item muze nastat problem - procesy zabiju, mohou mit ve zdrojich rozpracovane nejake operace - zdroje mohou byt v nekonzistentnim stavu - nutnost but nechat system uvaznuty, nebo se spokojit s nekonzistencemi, nebo system navrhnout tak, ze pri zabiti procesu se nezabije ihned, ale prvne provede zotaveni (rollback - anuluje sve operace a dostane zdroje do konzistentniho stavu) \\
+\end{itemize}
+
+\newpage
+
+\subsection{Formalni verifikace, verifikace s formalnimi koreny}
+Moznosti odhalovani nezadouciho chovani ystemu (uvaznuti, starnuti):
+\begin{itemize}
+    \item inspekce systemu - nez se kod nasadi, krome vyvojare kod musi projit i nekdo dalsi (ci skupina), kteri schvali, ze kod pochopili a je podle nich bezchybny,
+    \item simulace, testovani - vestavene systemy -  vytvori si model systemu a z nej se generuje kod, na modelu overuji chovani systemu - nevyhodou testovani na jedne jednotce (modelu) je to, ze se chyba nemusi projevit (nedeterminismus se nemusi projevit) - paralelni programy - vkladani sumu do planovani (na kriticka mista pred ne se vlozi nahodne zpozdeni, prepnuti kontextu), zvysi se tim mnozstvi prolozenych aktivit a sance ze se najde chyba,
+    \item dynamicka analyza - sleduje se co se deje v systemu, pote je snaha extrapolovat (="vestit"), co by se mohlo stat,
+    \item formalni verifikace ci verifikace s formalnimi koreny - pokud se rekne, ze program nema chybu ci urcitou vlastnost, tak ji ma s platnosti matematickeho dukazu,
+    \item nebo kombinace vyse uvedenych pristupu \\
+\end{itemize}
+
+Experimentuje se i s automatickymi opravami - je zde \textbf{behovy system, ktery monitoruje, co se deje}, pokud uvidi, ze nastala chyba, \textbf{pokusi se ji opravit automaticky} (napr. sledovani date race conditions - pri poruseni vzajemneho vylouceni pri pristupu ke sdilene promenne se automaticky prida zamek - mohu ale tzv. pacienta zabit - zpusobit uvaznuti, proto se napriklad misto toho pred praci s danou promennou misto vkladani zamku vynuti prepnuti kontextu - zvysi se sance, ze se projde kritickou sekci bez prepnuti kontextu)
+
+\textbf{Proces formalni verifikace:}
+\begin{itemize}
+    \item vytvoreni modelu - vytvori se zdrojovy kod, ci model, ktery se bude verifikovat (ci kombinaci, napr. cast jadra OS a model OS, odlehcenou implementaci),
+    \item specifikace vlastnosti, ktere maji byt overeny - mohou to byt genericke vlastnosti napr. v systemu nesmi byt deadlock nebo slozitejsi vlastnosti napr. v cache neni nikdy vice nez 10 polozek,
+    \item kontrola (automaticka), zda model splnuje specifikaci \\
+\end{itemize}
+
+\textbf{Overovani se provadi metodami:}
+\begin{itemize}
+    \item model checking (kontrola modelu),
+    \item theorem proving (dokazovani teoremu),
+    \item static analysis (staticka analyza) \\
+\end{itemize}
+
+Nad ramec verifikace se take provadi automaticka analyza dle dane specifikace - doda se specifikace, jake vlastnosti system ma byt, pro urcite tridy systemu je mozne automaticky vysyntetizovat korektni implemetaci.
+
+\newpage
+
+\subsubsection{Theorem proving}
+\begin{itemize}
+    \item teoremem je zde veta, ktera rika 'Muj program XXX spluje XXX specifikaci',
+    \item pouzivaji se poloautomaticke dokazovaci prostrek (eviduji, co uz jste dokazali, maji db standardne platnych skutecnosti z logiky, znaji pravidla spravneho odvozovani),
+    \item vyzaduje se expert, ktery urcuje, jak se dukaz ma vest (presto se to pouziva, napr. Mikrojadra ProvenCore ci seL4),
+    \item existuji i plne automaticke dokazovace (rozhodovaci procedury, umi automaticky rict zda plati ci ne) - obvykle pro omezene fragmenty logik, spise se pouzivaji jako pomocne \\
+\end{itemize}
+
+\subsubsection{Model checking}
+\begin{itemize}
+    \item obvykle plne automatizovany pristup, prostredek,
+    \item zalozen na systematickem generovani stavu systemu a stavoveho prostoru (systematicky se hleda, zda nekde neni chyba),
+    \item nevyhodou je obrovsky pocet stavu - napr. pri N dvoustavovych procesech (procesy zacnou a skonci), muze se vygenerovat $2^N$ stavu - problem stavove exploze \\
+\end{itemize}
+
+\subsubsection{Static analysis}
+\begin{itemize}
+    \item snaha analyzy a verifikace systemu na zaklade jeho zdrojoveho kodu, aniz by se tento kod provadel (nebo alespon ne v puvodni semantice - napr. celociselne promenne 0 - 1235, pamatuji si jen jestli je hodnota zaporna, 0 ci kladna),
+    \item nejjednodusi staticky analyzator je grep (naji se syntakticke vzory chyb a grepem se vyhledavaji),
+    \item ma ruzne podoby: data flow analysis, constraint analysis, type analysis, abstract interpretation, symbolic execution, ..
+    \item nastroje: Facebook Infer, Frama-C, Microsoft SDV, SpotBugs, cppcheck, ... \\
+\end{itemize}
+
+\newpage
+
+\section{}
+\textbf{Dvanacta prednaska:} Zacatek spravy pameti.
+\subsection{}
 TUDU
 
 \end{document}
