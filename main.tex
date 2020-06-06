@@ -23,7 +23,7 @@
 \textsc{\huge Fakulta informacnich technologii}\\
 \vspace{\stretch{0.382}}
 IOS - Operacni systemy\\[0.4em]
-{\Huge poznamky z prednasek}
+{\Huge poznamky z prednasek (the Little Book of IOS)}
 \vspace{\stretch{0.618}}
 \end{center}
 {\Large 2019/2020 \hfill Corse \& US Layout}
@@ -42,7 +42,21 @@ IOS - Operacni systemy\\[0.4em]
 
 \newpage
 
-\section{}
+\textbf{Preambule} \\
+
+Dokument je delen dle prednasek a toho, co se probiralo na prednaskach IOS (ak. r. 2019/2020). Tedy kazda hlavni kategorie znaci cislo prednasky, podkategorie znaci probirane tema, a popr. se pouzily i podpodkategorie pro rozdeleni velkych temat do vice useku.
+
+Je docela mozne, ze spousta veci bude pouze prepisem obsahu prezentace, nicmene takto cely dokument (ani jediny radek, az na vyjimky jako je treba deadlock) zpracovavan nebyl. Dokument byl zpracovan za pomoci zaznamu prednasek, a to tak, abych dane tema ci latku dostatecne pochopil a zaroven bylo zajisteno nejakym zpusobem, aby dane vysvetleni nebylo az moc polopate a stacilo napr. ke zkousce.
+
+Nekdy pro pochopeni dane latky byly vhodne obrazky, nekde byly i nutnosti (napr. princip fs). Take jsou obrazky pouzity pro pseudokody, protoze nejake normalni zpracovani kodu v latexu by trvalo zbytecne dlouho. Vsechny obrazky (i pseudokody) byly pouzity z ruznych prezentaci IOS. Moje rozhodne nejsou - pod popiskem kazdeho obrazku je tak zminka o tom, odkud dany obrazek pochazi.
+
+Diakritika nebyla pouzita z duvodu US-EN layout. (jedna se o zapisky, ne bestseller ...)
+
+Co se tyce pochopeni obsahu, bylo by dobre spolu pred ctenim jakekoli kapitoly (=prednasky) navstivit danou prednasku nebo si ji alespon pustit ze zaznamu. Bez toho je mozne, ze nektere veci nebude mozne pochopit. 
+
+\newpage
+
+\section{} \label{start-of-doc}
 \textbf{Prvni prednaska:} Uvod do predmetu, prehled operacnich systemu, zakladni pojmy, jadro operacniho systemu a jejich typy, historie vyvoje operacnich systemu, prehled technickeho vybaveni, klasifikace pocitacu, operacnich systemu, hlavni smery ve vyvoji operacniho systemu. \\
 \subsection{Uvod, prehled operacnich systemu}
 
@@ -3011,7 +3025,7 @@ Toto reseni ma nevyhodu - \textbf{hrozi vyhladoveni pisaru} - pokud do kriticke 
 
 \subsection{Deadlock (uvaznuti)}
 \subsubsection{Definice}
-\textbf{\textit{Uvaznutim (deadlockem) pri pristupu ke zdrojum s vylucnym (omezenym) pristupem rozumime situaci, kdy kazdy proces z nejake neprazdne mnoziny procesu je pozastaven a ceka na uvolneni nejakeho zdroje s vylucnym (omezenym) pristupem vlastneneho nejakym procesem z dane mnoziny, ktery jediny muze tento zdroj uvolnit, a to az po dokonceni jeho pouziti.}}
+\textbf{\textit{Uvaznutim (deadlockem) pri pristupu ke zdrojum s vylucnym (omezenym) pristupem rozumime situaci, kdy kazdy proces z nejake neprazdne mnoziny procesu je pozastaven a ceka na uvolneni nejakeho zdroje s vylucnym (omezenym) pristupem vlastneneho nejakym procesem z dane mnoziny, ktery jediny muze tento zdroj uvolnit, a to az po dokonceni jeho pouziti.}} \\
 
 \textbf{Vysvetleni definice:}
 \begin{itemize}
@@ -3214,7 +3228,809 @@ Nad ramec verifikace se take provadi automaticka analyza dle dane specifikace - 
 
 \section{}
 \textbf{Dvanacta prednaska:} Zacatek spravy pameti.
-\subsection{}
-TUDU
+\subsection{Sprava pameti}
+Aby program mohl byt proveden, musi byt spusten - musi byt nad nim vytvoren proces, msui mu byt pridelen procesor a take pamet (a dalsi zdroje - soubory, ..) \\
+
+\textbf{Rozlisujeme:}
+\begin{itemize}
+    \item logicky adresovy prostor - LAP - je virtualne adresovy prostor, se kterym pracuje CPU pri provadeni kodu (uzivatelskeho ci jadra - kazdy proces i jadro maji sve logicke adresove prostory),
+    \item fyzicky adresovy prostor - FAP - adresovy prostor fyzickych adres pameti (obsahuje adresy, ktere se umistuji na adresove sbernici, chcemeli z pameti nacist nebo do ni zapsat - je spolecny pro vsechny procesy i jadro) \\
+\end{itemize}
+
+Casto logicky adresovy prostor \textbf{jadra byva podprostorem logickeho adresoveho prostoru jednotlivych procesu}. Vsechny logicke adresove prostory procesu (v Linuxu) se prekryvaji ve stejne casti - \textbf{v casti, kde je LAP jadra}. LAP jadra \textbf{neni} ale procesum pristupny. Vyhodou je, ze pri prechodu rezimu procesu na rezim jadra se \textbf{pouze zpristupni tento LAP} nebo pri prepinani procesu (krome zmen mapovani casti LAP procesu) se \textbf{nemusi menit mapovani pro cast LAP jadra}.
+
+\textbf{Proces pracuje s logickymi adresami, ale na adresovou sbernici se umistuji fyzicke adresy}. Toto mapovani provadi \textbf{MMU (Memory Management Unit):}
+\begin{itemize}
+    \item HW jednotka specializovana na predklad logickych adres na fyzicke, 
+    \item dnes bezne soucasti cipu CPU,
+    \item provadi preklad na zaklade datovych struktur,
+    \item obsah struktur je castecne ulozen ve specialnich registrech, castecne v hlavni pameti systemu,
+    \item soucasti MMU je cache, obvykle TLB, pro urychleni prekladu \\
+\end{itemize}
+
+\textbf{Komunikace CPU a pameti:}
+\begin{itemize}
+    \item na CPU bezi programy (CPU pracuje s logickymi adresami),
+    \item pri cteni/zapisu logicke adresy,
+    \item adresa se preda do MMU,
+    \item MMU provede preklad logicke adresy na fyzickou,
+    \item MMU umisti fyzickou adresu sbernici a po ni se prenesou data/kod mezi pameti a CPU \\
+\end{itemize}
+
+\newpage
+
+\subsection{Pridelovani pameti}
+Existuje vice urovni pridelovani pameti. V \textbf{nejnizsich (z hlediska blizkosti hw) se prideluje FAP pro zamapovani do LAP}, pote jsou napr. pridelovani pameti pres knihovni funkce (malloc - mimo rezim jadra ci kmalloc, vmalloc - jadro), az po vyseurovnove pridelovani v ramci aplikaci. 
+
+Nejnizsi uroven pridelovani je \textbf{implementovana v jadre a jedna se o pridelovani FAP pro zamapovani LAP}. Bezne zpusoby pridelovani pameti (a mapovani LAP na FAP):
+\begin{itemize}
+    \item pridelovani po spojitych blocich (contiguous memory allocation),
+    \item segmentech,
+    \item strankach,
+    \item kombinace vyse uvedeneho (intel - segmenty a stranky) \\
+\end{itemize}
+
+\textbf{Funkce malloc:}
+\begin{itemize}
+    \item pri zadosti o alokaci nejakeho kusu pameti (poctu bajtu),
+    \item musi malloc pozadat jadro o prideleni FAP,
+    \item pozaduje od jadra vetsi blok pameti (segment, stranka),
+    \item z bloku pameti se vykousne pozadovany pocet bajtu,
+    \item ty dostane k dispozici uzivatel,
+    \item pri volani dalsich mallocu, dokud pozadovany pocet bajtu nebude vetsi nez prideleny blok, nepujdou pozadavky do jadra, ale bude se cerpat jiz prideleny prostor \\
+\end{itemize}
+
+\subsection{Contiguous Memory Allocation}
+Mechanismus mapovani logickych adres na fyzicke a pridelovani pameti po spojitych blocich. Jedna se o \textbf{nejjednodusi mechanimus z hlediska hw, tak obsluhy OS}. V beznych vypocetnich systemech se prilis \textbf{nepouziva}, nicmene je vhodny pro jednoduche a vestavene aplikace, ktere maji bezet na jednoduchem hw.
+
+\textbf{Popis:}
+\begin{itemize}
+    \item je to po spojitych blocich (neco jako ukladani dat spojite),
+    \item k popisu takoveho mapovani je treba znat, ve kterem FAP je zamapovan pocatek LAP,
+    \item je nutne vedet, jak je usek pameti velky (pro odchyceni pristupu mimo meze tohoto prostoru) \\
+\end{itemize}
+
+\textbf{Preklad adresy:}
+\begin{itemize}
+    \item MMU si pro aktualne bezici proces pamatuje 2 udaje,
+    \item v limitnim registru si pamatuje, kolik proces pameti dostal,
+    \item v relokacnim registru si pamatuje, na jakou fyzickou adresu byl zamapovan LAP procesu,
+    \item pokud dostanu logickou adresu napr. 10, 
+    \item zjisti, zda je adresa v ramci naalokovaneho prostoru,
+    \item pokud ne - chyba pri pristupu do pameti, posle se preruseni typu trap, obvykle je proces predcasne ukoncen,
+    \item pokud ano - mapovani se provede tak, ze se pouzije bazova adresa, na kterou je zamapovan FAP procesu, secte se s logickou adresou prostoru = mam adresu ve FAP (fyzickou adresu) \\
+\end{itemize}
+
+\textbf{Priklad prekladu LA na FA:}
+\begin{itemize}
+    \item proces 1 ma zacatek LAP na zacatku FAP (konec na FAP 100 000), proces 2 nekde uprostred (LA 0 = PA 1 mil.),
+    \item preklad LA 10 procesu 1,
+    \item zkontroluje se, zda 10 je mensi nez 100 000 (= konec LAP p1),
+    \item bazova adresa 0 se pricte s LA, tedy 0 + 10 = 10,
+    \item preklad LA 10 procesu 2,
+    \item zkontroluje se, zda 10 je v ramci rozmezi (ano),
+    \item bazova adresa 1 000 000 se pricte k 10, tedy 1 000 010 \\
+\end{itemize}
+
+\textbf{Tento mechanismus ma radu nevyhod:}
+\begin{itemize}
+    \item vyrazne se zde projevuje externi fragmentace pameti (FAP),
+    \item pridelovanim a uvolnovanim useku pameti vznika poslouppnost obsazenych a neobsazenych useku pametu, useky mohou byt obsazeny ruznymi procesy,
+    \item nejhorsim dopadem je, ze pri scitani volnych useku pameti muze byt prostor pro prideleni pameti procesu dostatecny, ale tyto volne useky nejsou-nemusi byt spojite, takze zde zdanlive neni dostatek pameti pro dany proces (neni mozne provest alokaci),
+    \item problemy se zvetsovani prostoru daneho procesu,
+    \item snaha o minimalizace dopadu externi fragmentace pomoci ruznych strategii (first fit se nepouziva, namisto toho napriklad best fit, worst fit ci binary buddy, ..),
+    \item provadi se dynamicka reorganizace pameti (nakladne)
+    \item neni mozne rozumne ridit pristupova prava v ramci pridelene pameti (nelze: cast pameti pro cteni, cast pro zapis, ..),
+    \item neni mozne take sdilest cast adresoveho prostoru (vse nebo nic),
+    \item pri virtualizaci pameti (swapovani) je nutne odlozit veskerou pamet na disk a pote ho vratit zpet - pomale, muze byt zbytecne. \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{bazova adresa} - pocatek LAP (tj. adresa 0 v LAP) ve FAP (nebo: pocatecni adresa LAP procesu ve FAP) \\[0.2em]
+\textit{first fit} - prochazi se volnymi useky a pouzije se prvni volny usek \\[0.2em]
+\textit{best fit} - podivam se na seznam volnych useku a vybere se ten, ktery je dostatecne velky, ale vyberu ten nejmensi z dostatecne velkych, \\[0.2em]
+\textit{worst fit} - paradoxne lepsi jak best fit, opak best fit, hleda se usek dostatecne velky a pouzije se ten nejvetsi (zbyde nepouzity velky kus, ktery se vyuzije pozdeji, napr. pri dalsim zvetsovani) \\[0.2em]
+\textit{binary buddy} - udrzuje se seznam volnych useku pameti, najdu si usek pameti, ktery odpovida nejlepe, a pokud presahuje, resp. je 2x vetsi nez pozaduji, rozdelim ho na polovinu a opet zjistim, zda je usek 2x vetsi, pokud ano, delim useky tak dlouho, az dojdu k useku pameti, ktery nelze rozdelit na poloviny, tak aby byl uspokojen dany pozadavek a pamet se prideli \\[0.2em]
+
+\subsection{Segmentace pameti}
+\begin{itemize}
+    \item LAP je rozdelen na kolekci segmentu,
+    \item segmenty mohou byt prideleny prekladacem, programatorem, jednotlivym castem procesu (castem dat, proceduram, zasobniku, ..),
+    \item kazdy segment ma cislo a velikost,
+    \item LA je cislo segmentu a posun v nem,
+    \item jednotlive segmenty patrici jednomu procesu nemusi byt zamapovany spojite (jeden segment ano, spojite, ale ruzne segmenty nemusi) \\
+\end{itemize}
+
+\textbf{Preklad adresy LA na FA:}
+\begin{itemize}
+    \item MMU potrebuje pracovat s tabulkou udaji - tabulkou segmentu, ulozena v RAM, v MMU je odkaz na zacatek tabulky (=pole),
+    \item logicka je adresa je delena na cislo segmentu (s) a posuv v ramci segmentu (d),
+    \item pri prekladu se vezme cislo segmentu (s), napr. pri praci s s=10 se podiva do radku tabulky 10,
+    \item na prislusnem radku se najde jakou ma segment velikost, jakou ma bazovou adresu,
+    \item pokud bude napr. d=1000, podiva se jestli je d v ramci pametoveho prostoru, ktery je pridelen,
+    \item pokud ne - vyjimka, chyba,
+    \item pokud ano - vezme se bazova adresa segmentu, secte se to s posuvem a mam FA \\
+\end{itemize}
+
+\textbf{Priklad prekladu:}
+\begin{itemize}
+    \item mam LA se segmentem s=10 a posuvem d=1000,
+    \item s 10 pristoupim na 10. radkek tabulky segmentu,
+    \item zde budu mit limit (velikost segmentu, zde napr. 100 000) a jeho bazi,
+    \item pokud d je v limitu (1000 < 100 000?),
+    \item vezmu bazi (napr. 1 000 000), sectu ji s d,
+    \item tzn. 1 000 000 + 1000 a dostanu fyzickou adresu (1 001 000) \\
+\end{itemize}
+
+\textbf{Vyhody:}
+\begin{itemize}
+    \item mohou byt pouziti jako jemnejsi jednotka ochrany pri pristupu do pameti (nektere mohou oznaceny jako pro cteni, nektere zapis, nektere v rezimu jadra, ..),
+    \item jemnejsi jednotka pro odkladani pameti na disk (odlozit se mohou segmenty, ne cela pameti procesu),
+    \item jemnejsi jednotka pro sdileni,
+    \item implementace je jednoducha,
+    \item pamet je pridelovana nespojita, zmirnuji se dopad externi fragmentace \\
+\end{itemize}
+
+\textbf{Nevyhody:}
+\begin{itemize}
+    \item pri zvetsovani opet dopad externi fragmentace,
+    \item mozny zdroj chyb, segmentace je viditelna procesu \\
+\end{itemize}
+
+\subsection{Strankovani}
+Je aktualne nejpouzivanejsim mechanismem mapovani LAP na FAP. LAP je rozdelen \textbf{jednotky pevne velikosti - stranky}, FAP je rozdelen na odpovidajici \textbf{jednotky stejne velikosti - ramce}. (nejcasteji velikost stranky je 4 KiB)
+
+\subsubsection{Vlastnosti}
+\textbf{Vyhody:}
+\begin{itemize}
+    \item pamet je pridelovana po ramcich (ty se zapamuji do stranek),
+    \item neviditelne pro uzivatelske procesu,
+    \item minimaluzuji se problemy s externi fragmentaci (podobne jako clustery u disku):
+    \begin{itemize}
+        \item porad vznikaji useky volnych a vyuzitych, nicmene nejmensi nevyuzita "dira" v pameti je 1 ramec, ten se vzdy da vyuzit (nespojite),
+        \item mozne snizeni rychlosti pristupu do pameti (nespojita alokace), proveji se vetsi pocet kolizi v caches,
+        \item zpomalovani alokace a dealokace pameti (delsi prace se strukturami co popisuji aktualni obsah pameti),
+        \item je snaha pridelovat pameti po spojitych posloupnostech ramcu (pokud je to mozne), napr. pomoci algoritmu binary buddy
+    \end{itemize}
+    \item jemna jednotka ochrany pristupu do pameti (kazda jednotliva stranka muze byt r, rw, uziv. rezim ci rezim jadra, je mozne provadet NX bit),
+    \item jemna jednotka sdileni (pamet sdilena mezi procesy lze sdilet pro strankach),
+    \item pri nedostatku pameti se odklada po jednotlivych strankach, \\
+\end{itemize}
+
+\textbf{Nevyhody:}
+\begin{itemize}
+    \item slozitejsi implementace,
+    \item vetsi rezie,
+    \item interni fragmentace (podobne jako u disku),
+    \item jsou vnimany jako vyrazne mensi nez vyhody systemu - proto jsou pouzivany nejvice \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{NX bit} - na nekterych architekturach specifikace, jestli obsah dane stranky lze interpretovat jako kod a provadet
+
+\subsubsection{Mapovani logickych adres na fyzicke}
+V nejjednodusim pripade se pouzivaji \textbf{jednoduche - jednourovnove tabulky stranek}. OS udrzuje \textbf{informaci o volnych ramcich} (zalezi na OS, hw nezajima), pro kazdy \textbf{proces si udrzuje tabulku stranek} (musi byt struktrovana tak, aby tomu dana architektora rozumela) \\
+
+\subsubsection{Tabulky stranek}
+\begin{itemize}
+    \item logicka adresa je rozdelena na cislo stranky (p-place) a na posuv stranky (d-displacement),
+    \item cislo stranky se pouzije jako index do tabulky stranek (=pole v pameti),
+    \item v MMU je registr, ktery bude ukazovat na to, kde ma dany proces ulozenou tabulku stranek,
+    \item cislo stranky se vezme jako index do tabulky stranek (p=10, pristoupim na 10. polozku),
+    \item pokud byla stranka alokovana (=ma pridelen ramec), na danem radku najdu cislo ramce,
+    \item cislo ramce se spoji s posuvem a dostanu FA \\
+\end{itemize}
+
+Na radku tabulky stranek, ktery odpovida dane strance, kde je ulozeno odpovidajici cislo ramce, \textbf{jsou ulozene ridici priznaky mapovani - platnosti mapovani, pristupu, modifikace, pristupova prava} (r, rw, user rezim, jadro rezim, moznost provadeni), \textbf{globality}.
+
+Tabulky stranek jsou udrzovany v \textbf{hlavni pameti (RAM)}, \textbf{zvlast} pro kazdy proces, MMU maji ve specialnim registru \textbf{pouze ukazatel na zacatek tabulky stranek}, pri prepinani kontextu se \textbf{meni pouze ukazatel} na zacatek tabulky stranek. (konkretne u intelu se ten registr jmenuje CR3)
+
+Neprovedeme-li zadnou dalsi optimalizaci, tak kazdy jednotlivy pristup do pameti (pro data ci instrukce) se zmeni \textbf{z jednoho pristupu na 2} (pri nacteni dat z RAM - nejprve musim jit do tabulky stranek, pote nacist vlastni data - oboji jsou v RAM) - zpomaleni o 100 procent. Pouziva se tak \textbf{vyrovnavaci pamet TLB - Translation Look-aside Buffer} pro urychleni prace s pameti.
+
+\textbf{Priklad prekladu LA na FA:}
+\begin{itemize}
+    \item LA, tvorena cislem stranky p=10, posuvem d=1000,
+    \item MMU bude mit v pameti umistenou tabulku stranek, v registru bude odkaz na adresu, kde se nachazi tabulka stranek,
+    \item MMU pouzije p=10 jako index do tabulky stranek, pristoupi na radek 10 tabulky stranek,
+    \item soucasti obsahu radku je odpovidajici cislo ramce (napr. 500),
+    \item dostaneme fyzickou adresu, tvorena ramcem f=500 a posuvem d=1000 \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{priznak platnosti mapovani} - zda je dany adresovy blok nebo neni pouzit (ne vsechny tabulky strankem v danem okamziku musi byt vyuzity) \\[0.2em]
+\textit{priznak pristupu} - byla stranka od okamziku zavedeni pameti zpristupnena? (dale slouzi jako informace, zda je stranka vhoda na odlozeni do pameti - jadro cas od casu prochazi bity a pristupove bity nuluje, pri hledani kandidata na odlozeni se zjistuje, zda v nekolika periodach bylo ke strance pristoupeno nebo ne - pokud delsi dobu ne - bude odlozena) \\[0.2em]
+\textit{priznak modifikace} - byla, nebyla modifikovana stranka? (pri odlozeni stranky a pote znovu zavedeni do pameti - aby se nemodifikovana stranka neodlozila znovu) \\[0.2em]
+\textit{priznak globality} - kdyz je stranka globalni, je sdilena za behu ruznych procesu, typicky se pouziva pro stranky jadra \\
+
+\subsubsection{TLB}
+\begin{itemize}
+    \item obsahuje dvojice cislo stranky a cislo ramce + jsou tam nektere ridici priznaky spojene s mapovanim (opravneni, modifikace),
+    \item v TLB nejsou cele stranky ci ramce (je to cache pro mapovani cisla stranky na cislo ramce),
+    \item typicky implementovana jako (castecne) asociativni pamet,
+    \item do pameti se pristupuje tak, ze TLB vsechny cisla dvojici cislo stranek a cislo ramce a HW se podiva, zda jestli tam je alespon 1, ktery ma mapovani pro dane cislo stranky a pokud ano, vybavi se odpovidajici ramec \\
+\end{itemize}
+
+\textbf{Nekdy je operace castecne asociativni:}
+\begin{itemize}
+    \item nekolik bytu z LA je pouzito klasickym zpusobem adresovani,
+    \item zbytek je pouzit pro asociativni vyhledavani,
+    \item napr. pokud se vymezi pro klasicke adresovani 2 byty, TLB se rozdeli na 4 casti (00,01,10,11) - bloky a v ramci bloku se bude hledat asociativne \\
+\end{itemize}
+
+\textbf{Preklad:}
+\begin{itemize}
+    \item obdobne jako bez TLB,
+    \item misto pristupu do pameti na urcity radek tabulky hw bude hledat, zda nekde v tabulce je polozka s cislem 10 a pokud ano, vezme k tomu odpovidajici cislo ramce,
+    \item pokud takove vyhledani nastane, rika se tomu TLB hit, pouzije se okamzity preklad - cislo ramce a posuv a jsem v FAP,
+    \item pokud se nepodari uspesne vyhledat polozku, pouzije se stejny postup jako bez TLB (pres pamet) - TLB miss \\
+\end{itemize}
+
+\textbf{Priklad prekladu s TLB:}
+\begin{itemize}
+    \item architektura s 1-urovnovou tabulkou stranek, k dispozici TBL, ktera je castecne asociativni, 2 byty se pouziji pro rozliseni casti TBL a zbytek se prohledava asociativne,
+    \item LA, rozdelena na cislo stranky p - to na rozdeleno na horni 2 byty (adresovani v ramci TLB), zbytek bude cislo stranky (p=01 a zbytek 10), posuv d=1000,
+    \item TLB rozdeleno na 4 bloky, jeden z nich adresovan bity 00, dalsi 01, dalsi 10, a posledni 11,
+    \item p=01 10 mi rika, ze mam jist do 2. casti,
+    \item v bloku budou cisla stranek, odpovidajici ramce,
+    \item vsechny radky se prohledaji paralelne - je v nekterem z tech radku cislo 10 ?,
+    \item ano - vezmu odpovidajici ramec (napr. 1 000 000) - TLB hit,
+    \item FA bude f=1 000 000 a posuv d=1 000,
+    \item ne - nastane TLB miss, je nutne jit do klasicke tabulky stranek a tam hledat \\
+\end{itemize}
+
+K neuspesnemu vyhledani muze dojit \textbf{pri pristupu k instrukcnimu kodu} (cteni instrukce, operandu) \textbf{u kazdeho cteni muze dojit k neuspesnemu vyhledani opakovane} (napr. 32b architektura - 4b instrukce, nespravne zarovnana instrukce, 2b na zacatku 1. stranky, 2b na zacatku 2. stranky - je nutne provest preklad cisel odpovidajici ramec u obou stranek - muze dojit 2x k TLB miss) - pro instrukci (velka 4b) ktera nacita 4b z pameti jsou nutne 4 preklady a 4x muze nastat TLB miss.
+
+\textbf{Pokud dojde k TLB miss:}
+\begin{itemize}
+    \item hw bude hledat automaticky v tabulce stranek - plati u architektur, kde je TLB hw rizene (vetsina architektur),
+    \item jsou i SW rizene TLB, pokud nastane TLB miss, nastane preruseni od MMU k CPU, jadro si tento preklad provede, specializovanymi instrukcemi se naplni preklad do TLB a preklad adresy se opakuje (CPU jako MIPS, SPARC)) \\
+\end{itemize}
+
+Nekdy muze byt pouzito vice TLB, napr. 64b architektury obvykle maji \textbf{preklad narocnejsi - je potreba vice TLB} (typicky 2-urovnova TLB - jedna pro preklad kodovych adres, druha pro kodovych adres).
+
+\textbf{Pri prepnuti kontextu} (se meni hodnota ukazatele tabulky stranek v MMU registru) \textbf{je nutne invalidovat obsah TLB a znovu naplnit jeho obsah - pouzivaji se optimalizace:}
+\begin{itemize}
+    \item pouzivaji se globalni stranky (stranky pouzivane jadrem - jsou na stejnem miste),
+    \item na nekterych CPU se jeste do radku TLB doplnuje identifikator procesu, pro ktery je mapovani platne (vyhledava se na zaklade cisla procesu a cisla stranky),
+    \item pri zmenu obsahu tabulek stranek je nutna take invalidizace obsahu TLB (neprojevily by se zmeny v tabulce stranek) \\
+\end{itemize}
+
+Udaje se do TLB dostavaji (v pripade hw rizenych) tak, ze \textbf{se preklad nahrava do TLB pri prvnim pristupu na stranku}, (pri nedostatku prekladu se nejaky preklad odstrani) \textbf{v pripade sw rizenych TLB muze byt obsah nahravan specialnimi instrukcemi jadrem}. HW take \textbf{pocita s tim, ze budeme s pameti pracovat spojite}, tak si muze nekdy nahrat do TLB preklady nasledujicich adres \textbf{dopredu}.
+
+\textbf{definice:} \\[0.5em]
+\textit{asociativni pamet} - pamet neni adresovana adresou, ale vybavuje si obsah na zaklade casti jeho obsahu \\
+
+\newpage
+
+\subsubsection{Efektivnost strankovani s TLB}
+Efektivni pristupova doba je:
+
+$$(\tau + \epsilon) \alpha + (2 \tau + \epsilon)(1 - \alpha)$$
+
+\begin{itemize}
+    \item kde $\tau$ je vybavovaci doba RAM,
+    \item $\epsilon$ je vybavovaci doba TLB,
+    \item $\alpha$ je pravdepodobnost uspesnych vyhledani v TLB (TLB hit ratio, $1 - \alpha$ je tedy pravdepodobnost neuspesnych vyhledani),
+    \item jedna se o vazeny prumer, kde se spocita doba pristupu do pameti pokud se zadari vyhledani $(\tau + \epsilon) \alpha$,
+    \item pokud se nezadari vyhledani $2\tau + \epsilon$ (2x pristup do pameti)
+    \item napr. pro $\tau = 100ns, \epsilon = 20ns, \alpha = 0.98$, pote dojde ke zpomaleni o 22 procent \\
+\end{itemize}
+
+Tento vztah je sestaven za predpokladu, ze pote co se neuspesne vyhleda v TLB, pujdu do RAM, najdu preklad v RAM, a pote pujdu do RAM pro data - v praxi to funguje tak, ze pokud \textbf{MMU nalezne preklad v RAM, automaticky ho ihned doplni do TLB, provede opakovany preklad pro TLB, a az pote jde pro data/kod do pameti}. (vztah v praxi by pristupova doba mela $2\tau + 2\epsilon + \delta$, delta - provede se uprava TLB)
+
+Je \textbf{dulezite aby bylo TLB uspesne, jinak se pristupova doba do pameti bude rychle zpomalovat}, uspesnost TLB ovlivnuje:
+\begin{itemize}
+    \item velikost TLB (to ovlivni vyroci cipu),
+    \item dobra lokalita odkazu programu (muze ovlivnit programator) \\
+\end{itemize}
+
+\textbf{Priklad:}
+\begin{itemize}
+    \item inicializace matice, MAX x MAX prvku,
+    \item v pameti linearizovana, ukladaji se typicky po radcich,
+    \item inicializace 2 zpusoby,
+    \item prvni zpusob incializuje matici po sloupcich, druhy po radcich,
+    \item v pripade pristupu po radcich je v souladu s ulozenim pameti po radcich - bude vyrazne efektivnejsi z hlediska mozneho poctu neuspesneho vyhledani TLB, zatimco pristup po sloupcich bude mene efektivni,
+    \item v pripade 2x2 matice po radcich nastane 2x TLB miss (pri TLB kapacite o jedne polozce), po sloupcich nastane 4x TLB miss \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{lokalita odkazu programu} udava s kolika ruzymi shluky adres (adresy blizko sebe, shluk = 1 stranka) pracuje v danem procesu za kratky casovy okamzik program (pokud shluku adres neni mnoho - program ma dobrou lokalitu adres) \\
+
+\subsubsection{Implementace tabulek stranek}
+Kdyby se tabulky stranek implementovali jako jednourovnove, zabraly by prilis moc pameti. 
+
+Pro 32b systemy (intel) se strankami o velikosti  4 KiB (12 bitu se odkousne na posuv stranky), zbyva 20 bitu LA, udavaji cislo stranky a pocet radku v tabulce stranek (odpovida poctu stranek), odpovida to pres 1 milionu polozek. Ma li mit 1 polozka tabulky stranek 4B (je tam cislo stranky, ramce - 20 bitove, k tomu ridici priznaky - celkem potreba 27 bitu + zarovnani na bajty - 32 bitu), dostavame tak 4 MiB pro jednu tabulku stranek pro kazdy procesu (bezne muze bezet 100 procesu - jen na tabulky stranek je potreba 400 MiB)
+
+Pro 64b systemy je problem jeste horsi - take se pouzivaji 4 KiB stranky, teoreticky by slo pouzit az 52 bitu na adresu stranky - pro polozku bude potreba 8B.
+
+\subsubsection{Hierarchicke tabulky stranek}
+Nebude zde 1 tabulka stranek pro 1 proces, ale pro \textbf{1 proces bude vice tabulek v hierarchicke strukture}, ne vsechny dilci tabulky musi byt v danem okamziku alokovane (vznikaji \textit{tabulky tabulek stranek}).
+
+\textbf{Princip fungovani} hierarchicke tabulky na prikladu \textbf{dvouurovnove tabulky stranek (pouzivane u i386)}:
+\begin{itemize}
+    \item 32b logicka adresa, 12 dolnich bytu jsou vymezeny na posuv v ramci stranky ($2^12 = 4 KiB$ velikost stranky),
+    \item zbyvajicich 20 bytu je pro cislo stranky (rozdeleno na horni a dolni cast po 10b), pouzivaji se jako indexy do dilci tabulky stranek 2. urovne a nasledne dilci tabulky stranek 1. urovne,
+    \item dilci tabulka 2. urovne je pro dany proces prave 1 - jedna se o adresar stranek,
+    \item v registru CR3 (v MMU na Intelu) je ulozen odkaz na zacatek adresare stranek (=pole) (pro aktualne bezici proces),
+    \item prvni uroven tabulek stranek nemusi byt pouzita prislusnym priznakem v adresari stranek (je mozne rict, ze prislusna polozka adresare stranek nepouziva 1. uroven - pracujeme s velkymi strankami - tedy pracujeme s posuvem 22 bytu - 4 MiB stranky) \\
+\end{itemize}
+
+\textbf{Preklad LA na FA (na prikladu vyse):}
+\begin{itemize}
+    \item vezme se obsah tech hornich 10 bytu (31-22), je to 10b cislo, ktere se pouzije jako index do tabulky stranek 2. urovne,
+    \item index = cislo radku,
+    \item na teto polozce najdu odkaz na zacatek dilci tabulky stranek 1. urovne (tech muze byt vic),
+    \item vezmu cislo ulozene v dalsich 10 bytech (21-12), pouziju ho opet jako index do teto tabulky,
+    \item zde bude odpovidajici cislo ramce,
+    \item za predpokladu ze v casti, kde jsou ridici priznaky je uvedeno, ze mapovani je platne,
+    \item cislo ramce se vezme, prida se k tomu posuv a mam pristup do pameti \\
+\end{itemize}
+
+\textbf{Efektivita pristupu do pameti (2-urovnove tabulky stranek, viz vyse):}
+\begin{itemize}
+    \item z jednoho pristupu se stanou 3 pristupy,
+    \item nejprve musim do adresare stranek (1x),
+    \item pote do dilci tabulky stranek (2x),
+    \item az pote mohu do pameti (3x),
+    \item pokud nebude pracovat TLB, zpomaleni bude o 200 procent \\
+\end{itemize}
+
+\textbf{Tabulky stranek na x86-64 systemech (4-urovnove tabulky):}
+\begin{itemize}
+    \item 64 bitove adresy, 2 urovnove tablky stranek nestaci,
+    \item dolnich 12 bitu je pouzit jako offset stranky (v pripade 4 KiB stranek),
+    \item cislo stranky ma (47-12) 36 bitu,
+    \item tedy mame 48 bitu logicke adresy, s tim ze mame jeste znamenkove rozsireni (47. bit se ma zopakovat az po bit 63),
+    \item cislo stranky je rozdeleno na 4 indexu (od spodu po 9 bitech index do 1. urovne, 2. urovne, 3., 4.),
+    \item prvni urovni se rika dilci tabulka stranke,
+    \item 2. urovni se rika adresar stranek,
+    \item 3. uroven je tabulka ukazatelu, \\
+\end{itemize}
+
+\textbf{Preklad LA na FA (na prikladu vyse, tj. 4-urovnove tabulky na 64bit systemech):}
+\begin{itemize}
+    \item opet se pouziva registr CR3, ve kterem je ulozen odkaz na zacatek tabulky 4. urovne (adresa je ulozena mezi bity 51-12 - fyzicke adresy se nepouzivaji 64bitove, ale pouziva se maximalne 52 bytu - architekturalni limit - dolnich 12 bytu je posuv v ramci stranky),
+    \item mezi bity 47-39 se vezme index do tabulky 4. urovne, tam se najde odkaz na zacatek tabulky 3.urovne, 
+    \item pouzije se dalsi index (byty 38-30), dostaneme odkaz na zacatek tabulky 2. urovne, ...,
+    \item pouzije se posledni index (20-12), dostaneme odkaz na dilci tabulku stranek, tam dostaneme cislo ramce, k nemu se pricte posuv,
+    \item dostavame fyzickou adresu,
+    \item jeden radek v tabulce zabira zde 8 bajtu, pri velikosti 4 KiB tabulky na adresaci jednoho radku staci 9 bytu (proto tady 9, ne 10 jak u 32b) \\
+\end{itemize}
+
+V x86-64 dojde \textbf{bez TLB zpomaleni o 400 procent - 5 pristupu} do pameti. Takze zde zavisi (velikost stranek), jake se pouzije adresovani:
+\begin{itemize}
+    \item ctyrurovnove - stranky o velikosti 4 KiB,
+    \item triurovnove - stranky velke 2 MiB,
+    \item dvouurovnove - stranky velke 1 GiB \\
+\end{itemize}
+
+\newpage
+
+\subsubsection{Hierarchicke stranky - TLB}
+Roste zde vyrazne \textbf{vyznam TLB}:
+\begin{itemize}
+    \item na 64 bitovych CPU jsou vetsi, maji slozitejsi organizaci,
+    \item maji viceurovnove TLB, byva oddelena zvlast pro datove stranky a instrukcni stranky (i7 - dve urovne TLB, zvlast je uroven datova a instrukcni, pote je spolecna TLB urovne 2) \\
+\end{itemize}
+
+Dalsi moznosti \textbf{optimalizace prace s TLB:}
+\begin{itemize}
+    \item globalni stranky - stranky jadra, ktere jsou sdilene mezi jednotlivymi procesy jsou oznacene jako globalni a nemusi se vyhazovat pri prepnuti kontextu,
+    \item vstupy TLB spojene s identifikatory procesu - krome cisla stranky, ramce bude na jednotlivych radcich TLB bude zde proces,
+    \item pouziva se spekulativni dopredne nahravani prekladu TLB,
+    \item pouzivaji se specializovane cache (krome TLB) pro ukladani polozek (urovni) tabulek stranek \\
+\end{itemize}
+
+\textbf{Zanorene hierarichicke tabulky stranek (Intel/AMD):}
+\begin{itemize}
+    \item pri virtualizaci vznikaji zanorene tabulky stranek (tabulky stranek host OS, tabulky stranek virtualniho OS),
+    \item v pripade 64 bit procesoru se bude pouzivat 8 urovni tabulek stranek (4 pro virtualni pc, dalsi 4 pro hosta),
+    \item pouziva se tak odliseni polozek v TLB pouzivane na fyzickem stroji pro ruzne virtualni strome - je zde identifikator pro virtualni pc (VPID na Intelu nebo ASID na AMD) \\
+\end{itemize}
+
+\subsubsection{Priklad na 4-urovnove tabulce stranek}
+Chci provest 8 bajtovou instrukci, ktera bude nacitat 8 bajtu z pameti. \textbf{Kolik pristupu do pameti se v nejhorsim pripade provede?}:
+\begin{itemize}
+    \item instrukce a data mohou byt na jinych strankach, oboje samostatne mohou byt na rozmezi 2 stranek (4b 1. stranka, 4b 2.), navic kazdou stranku nemusim mit fyzicky v prostoru za sebou (nelze to nacist jednim ctenim - ctu ze 2 ramcu),
+    \item jen pro nacteni instrukce a dat budou potreba 4 pristupy do pameti (pouze jde o samotne cteni instrukce a dat! - nutny jeste preklad),
+    \item preklad se provadi pro kazdou stranku zvlast pres 4-urovnovou tabulku stranek,
+    \item provadet se budou 4x4 pristupy (4 stranky, 4 urovne) pro preklad adres, tzn. dalsich 16 pristupu,
+    \item celkem tak 16 + 4 = 20 pristupu do pameti \\
+\end{itemize}
+
+\newpage
+
+\subsubsection{Hashovane tabulky stranek}
+\begin{itemize}
+    \item logicka adresa clenena na cislo stranky p, posuv stranky d,
+    \item MMU si vede prekladovou tabulku, ktera ma charakter hash tabulky, ve specialnim registru bude odkaz na zacatek hash tabulky,
+    \item vezme se cislo stranky, prozene se hashovaci funkci (ta je implementovana v HW, MMU) - vypadne odkaz do hashovaci tabulky (cislo radku hash tabulky),
+    \item problem - vice ruznych stranek se muze namapovat na stejnou polozku v hashovaci tabulce,
+    \item neni zde tak primo umisteny preklad, ale odkaz na zretezeny senzam prekladovych polozek (cislo stranky, ramce), 
+    \item tento seznam MMU musi projit a dohledat pripadny preklad,
+    \item az najdeme odpovidajici polozku, najdeme ramec, ten umistime do adresy misto cisla stranky, prida se posuv - yaay fyzicka adresa,
+    \item efektivita zavisi na delce zretezenych seznamu - pokud bude hash funkce spatna - efektivita bude spatna, \\
+\end{itemize}
+
+\textbf{Da se modifikovat napr.:}
+\begin{itemize}
+    \item nemusi se pouzivat cele cislo stranky pro hashovani,
+    \item je mozne pouzit jen nekolik bytu stranek pro rozliseni ruznyh hash tabulek \\
+\end{itemize}
+
+\subsubsection{Dalsi modifikace hashovanych tabulek stranek}
+\textbf{Fixni pocet prekladovych polozek:}
+\begin{itemize}
+    \item zretezeny seznam prekladovych polozek byva nahrazen fixnim poctem prekladovych polozek, ktere se ukladaji do hashovaci tabulky na dany radek (namisto aby v tabule byl odkaz na seznam, tabulka bude "sirsi" a na 1 radku bude 4-8 predkladovych polozek a hleda se v ramci radku),
+    \item pokud preklad nebude nelazen, neznamena to, ze stranka neni mapovana, pouze se posle preruseni, jadro zjisti ze se nepodarilo dohledat na danem radku, proto musi jit do tabulek stranek, ktere si vede ve vlastni rezii (SW tabulek stranek),
+    \item zde si dohleda, jestli preklad existuje (pokud ne = nastane vypadek stranky),
+    \item pokud existuje - upravi se tabulka stranek tak, aby tam dane cislo bylo,
+    \item pouziva se napr u CPU PowerPC (superpc) nebo na CPU Itanium (polozky mohou byt zretezeny, ale hw zretezeny seznam nepouziva - pokud je prvni polozka preklad, pouzije se, pokud ne - preruseni, jadro se podiva jestli ma nejaky dalsi seznam prekladovy polozek a ciste sw se dohleda preklad, pokud ho najde, provede se uprava tabulky stranek a novy preklad) \\
+\end{itemize}
+
+\textbf{Hashovana tabula stranek muze byt sdilena vsemi procesy:}
+\begin{itemize}
+    \item je nutne do prekladovych polozek umistovat cislo stranky ale i odpovidaji cislo procesu,
+    \item hashovaci funcki se prozene cislo stranky i cislo procesu,
+    \item dohledava se dle cisla stranky i procesy,
+    \item namisto cislo procesu se muze jeste pracovat s cisly pametoveho regionu, kazdy proces ma sva cisla regionu, lokalni cisla regionu se mapuji na cisla globalni - umozuje sdileni regionu (lokalni regiony procesu se muzou namapovat na 1 fyzicky region - sdileny), adresa je dana cislem regionu a cislem stranky,
+    \item krome cisla stranky mam jeste lokalni region v LA, region se prevede na globalni cislo regionu, cislo stranky se prozene hash funkci a bude se vyhledavat - pouziva se u PowerPC a Itanium \\
+\end{itemize}
+
+\textbf{definice:} \\[0.5em]
+\textit{pametove regiony} - LAP je delen na stranky a na vyssi urovni je delen na regiony - skupiny stranek, ktere nasleduji za sebou, jsou promenne velikosti (neco jako extenty), jsou pouzity za urcitym ucelem (datovy, kodovy,..) \\
+
+\subsubsection{Priklad na sdilene hasovaci tabulce stranek s regiony}
+LAP je rozdelen na stranky, ty jsou \textbf{deleny na regiony} (napr. 6 stranek - region 1 ma prvni 3 stranky, region 2 ostatni),
+\begin{itemize}
+    \item LA = lok. cislo regionu, cislo stranky, posuv v ramci stranky,
+    \item lokalni cislo regionu se prelozi pres tabulku na globalni cislo regionu, to se spoji s cislem stranky,
+    \item posuv se nemeni,
+    \item glob. cislo regionu a cislo stranky se prozene hashovaci funkci,
+    \item dostanu odkaz do hash tabulky, na urcity radek,
+    \item rozdelena na urcity (pevny) pocet zaznamu, 
+    \item vzdy je tam cislo regionu, cislo stranky, odpovidajici ramec, potom dalsi cislo regionu, stranky, ramec, atd.,
+    \item prohledavam, jestli se nekde v prislusne polozce nachazi dvojice globalni cislo regionu a cislo stranky,
+    \item k tomu najdu odpovidajici ramec \\
+\end{itemize}
+
+\subsubsection{Invertovana tabulka stranek}
+\begin{itemize}
+    \item nepreklada cislo stranek na cislo ramce, ale obracene - cislo ramce na cislo stranky,
+    \item mapuje ramce na stranky,
+    \item jeji radky odpovidaji ramcum, je zde tolik polozek, kolik mam ramcu,
+    \item tabulka je nutne sdilena - pro vsechny procesy,
+    \item je to pole,
+    \item hashovani je resene hardwarove \\
+\end{itemize}
+
+\textbf{Preklad:}
+\begin{itemize}
+    \item v polozkach tabulky se krome cisla stranky uklada i PID procesu,
+    \item vezmu PID, cislo stranky,
+    \item prohledavam od zacatku do konce,
+    \item zjistuji, jestli nektery radek odpovida PID ktere me zaijma,
+    \item a odpovida strance kterou hledam,
+    \item nalezl jsem preklad,
+    \item odpovidajici ramec ma hodnotu i, kde i je radek tabulky, na kterem jsem odpovidajici preklad nasel, \\
+\end{itemize}
+
+\textbf{Vyhody:}
+\begin{itemize}
+    \item uspora pameti (1 tabulka pro vsechny) \\
+\end{itemize}
+
+\textbf{Nevyhody:}
+\begin{itemize}
+    \item prohledavani od zacatku do konce je neakceptovatelne - prilis pomale - resi se kombinaci s hashovanim,
+    \item neni nejpouzivanejsi,
+    \item komplikace s tim, jak implementovat sdileni stranek - pokud vice procesu bude sdilet nejaky ramec, stejne polozce bude odpovidat vice dvojic PID a cislo stranky, jenze muze zde byt jen jedna dvojice - neustale bude dochazet k vypadkum,
+    \item jadro si musi (paralelne) tak vest klasicke tabulky stranek, temi projde, zjisti ze preklad je mozny, opravi ho, bude chtit prvni preklad a jedna polozka se bude vyhazovat,
+    \item jeste krome stranek jsou zde regiony, indexovat se pomoci cisla regionu a cisla stranky \\
+\end{itemize}
+
+\textbf{Kombinace s hashovanim:}
+\begin{itemize}
+    \item misto hledani od zacatku do konce,
+    \item se vezme PID a cislo stranky - prozenu hashovaci funkci,
+    \item dostanu odkaz do tabulky,
+    \item prohledavam od tohoto mista,
+    \item typicky zretezeni je uvnitr tabulky \\
+\end{itemize}
+
+\subsubsection{Priklad na invertovane tabulce stranek s hashovanim}
+\begin{itemize}
+    \item mam PID procesu, jeho LA = cislo stranky a posuv v ramci stranky,
+    \item vezmu PID a cislo stranky, prozenu hash funkci,
+    \item dostanu odkaz na nejaky radek invertovane tabulky stranek (v MMU je odkaz na zacatek),
+    \item na danem radku bude ulozeno, pro jaky proces je mapovani, pro jakou stranku je mapovani, a odkaz na dalsi stranku procesu
+    \item pokud PID a cislo stranky nesouhlasi s danym radkem, je zde odkaz na jiny radek, kde ma dany proces jinou stranku,
+    \item pokud najdu odpovidajici PID a cislo stranky,
+    \item nalezli jsme odpovidajici ramec,
+    \item je umisteny - nikde, cislo ramce je cislo polozky - radek v tabulke \\
+\end{itemize}
+
+\newpage
+
+\section{}
+\textbf{Posledni prednaska:} Dokonceni spravy pameti.
+\subsection{Strankovani a segmentace na zadost}
+\textbf{PAE - page adress extension} - intel, rozsireni na $2^36$ bitu fyzicke adresy, kde 4 horni bity nastavoval OS. To umoznilo \textbf{vyuzit az 64 GiB pameti na 32b} systemech (z hlediska procesu ale bylo mozne pouzit maximalne 4 GiB / proces).
+
+Virtualizace pameti umoznuje procesu a jadru pracovat \textbf{s oddelenymi linearnimi logickymi adresovymi prostory}. (kazdy proces vidi svuj prostor, mezi sebo nekoliduji) Pro jednotlive procesy jsou pristupy \textbf{transparentni - nevi o tom, ze v jeden okamzik, cast pouzivane FAP pouziva napr. jiny proces}.
+
+Vyhodou je \textbf{mensi spotreba pameti, rychlejsi odkladani na disk, zavadeni do pameti} (neni nutne odlozit ci zavest cely adresovy prostor procesu).
+
+Cast pameti \textbf{lze odlozit na disk a v pripade potreby opet nahrat do PC}. (z disku se casti LAP zavadi do FAP pouze tehdy, pokud je to nutne).
+
+Hovorime pak o:
+\begin{itemize}
+    \item strankovani na zadost,
+    \item segmentovani na zadost. \\
+\end{itemize}
+
+\subsection{Strankovani na zadost}
+Stranky \textbf{jsou zavadeny do pameti, jen pokud k nim pristupujeme}. OS se stara o to, ze uchovava \textbf{informace} o tom, ktere stranky jsou vyuzite a ktere ne (resp. v tabulce stranek - flag - bit, urcuje jestli je stranka v pameti nebo na disku).
+
+Pokud po vyhledani cisla stranky (a prislusneho ramce) \textbf{je stranka ulozena v pameti}, postupuje se normalne (prelozi se na FA). Pokud ne, \textbf{posle se preruseni OS (trap) - jedna se o vypadek stranky} (page fault).
+
+U jinych tabulek stranek (hash, invertovanych) \textbf{hw se podiva do seznamu stranek}, pokud tam stranka nebude, OS se podiva jeste \textbf{do svych sw tabulek stranek}. Pokud vsak zjisti, ze se pristupuje na LA, ktera neni namapovana v pameti - dojde k \textbf{vypadku stranky}.
+
+Vypadek stranky \textbf{je preruseni od MMU, udava ze nelze prevest adresu} == neni definovano mapovani v tabulce stranek.
+
+\subsection{Obsluha vypadku stranky}
+\begin{itemize}
+    \item kontrola, zda proces neodkazuje mimo prideleny adresovy prostor (pokud ano - segfault, jadro proces ukonci),
+alokace ramce,
+\begin{itemize}
+    \item proces pristupuje tedy do pameti, ktera neni v FA namapovana,
+    \item pouzije se volny ramec, pokud nejaky volny je,
+    \item pokud neni - vybereme si stranku v pameti, ktera ma jiz prideleny ramec (victim page - obet), odlozime obet na disk, pokud byla stranka zmenena, pokud zmenena nebyla (uz je na disku), uvolnime ramec a pouzijeme uvolneny ramec 
+\end{itemize}
+    \item inicializace stranky (po alokaci zavisla na predchozim stavu stranky),
+    \begin{itemize}
+        \item pokud jde o prvni odkaz na stranku - pokud je to kod ci inicializovana data - nacte se z programu, vse ostatni - data se nevynuluji (kvuli bezpecnosti),
+        \item pokud to nebyl prvni pristup - stranka uz byla v minulosti uvolena z FAP - pokud to je kod ci konstantni data - nactou se z programu, ostatni - pokud byla modifikovana, ze swapu se stranka vrati zpet do FAP, jinak se obsah opet vynuluje
+    \end{itemize}
+    \item uprava tabulky stranek - upravit odkaz, kam vede LA (ramec se zmeni),
+    \item proces je pripraven na opakoveni instrukce, ktera vypadek zpusobila (je ve stavu pripraveny) \\
+\end{itemize}
+
+\subsection{Vykonnost strankovani na zadost}
+Efektivni doba pristupu do pameti:
+$$(1 - p)T + pD$$
+
+\begin{itemize}
+    \item kde $p$ je page fault rate = pravdepodobnost vypadku stranky ($(1 - p)$ je pravdepodobnost ze k vypadku nedojde),
+    \item $T$ doba pristupu bez vypadku,
+    \item $D$ doba pristupu s vypadkem \\
+\end{itemize}
+
+Doba pristupu bez vypadku je mnohem mensi nez doba pristupu s vypadkem. - zavisi na tom \textbf{lokality odkazu v procesech, vhodny vyber zavadenych ci odkladanych stranek} (algoritmus vyberu "obeti"), \textbf{dostatek pameti, jemu prideleny pocet procesu, ..} - snaha mit $p$ co nejmensi.
+
+\newpage
+
+\subsection{Pocet vypadku stranek}
+Mame 1 instrukci, kolik vypadku pri jejim zpracovani muze nastat ? Muze dojit pri \textbf{cteni instrukce, pri praci s kazdym z jejich operandu}, u obou muze dojit k vypadku \textbf{vicenasone}.
+
+Vicenasobne vypadky mohou byt zpusobeny:
+\begin{itemize}
+    \item nezarovnanim instrukce (instrukce se nachazi pulka v 1 strance a druha pulka ve 2. strance),
+    \item nezarovnanim dat (jako instrukce vyse),
+    \item data jsou delsi nez 1 stranka (instrukce pracujici s mnoho daty, napr. na Intelu MOVSB),
+    \item vypadky tabulek stranek na ruznych urovich - napr. hiearachicka tabulka stranek, kdy tabulky mohou byt velke, proto se odkladaji do pameti a muze opet dochazet k vypadkum - obvykle alespon cast tabulek stranek je chranena pred vypadkem stranek (zejmena tabulka stranek nejvyssi urovne) \\
+\end{itemize}
+
+\textbf{Priklad (podobny u zkousky):}
+\begin{itemize}
+    \item Jaky je maximalni procet vypadku stranek v systemu se strankami o velikosti 4 KiB, 4-urovnovou tabulkou stranek, u ktere pouze dilci tabulka nejvyssi urovne je chranena proti vypadku, pri provadeni nenactene instrukce o delce 4 B, ktera presouva 8 KiB z jedne adresy pameti na jinou?
+    \item instrukce bude na rozmezi dvou stranek
+    \begin{itemize}
+    \item pri pristupu na 1 stranku je nutne projit celou hierarchickou tabulku stranek (mame 4 urovne, 1 chranena),
+    \item v tab 1. urovne je odkaz na tab. 2. urovne, zde k vypadku muze dojit (+1), tu je odkaz na tab 3. urovne, stejny case (+1), stejne u 4. urovne (+1), to, kam ukazuje tab. 4. urovne (na FAP) opet nemusi byt v pameti (+1)
+    \item pro zpracovani 1 casti instrukce muze dojit ke 4 vypadkum stranek,
+    \item zpracovani 2. casti - 1. stranka bude uplne na konci vsech tabulek stranek - pri inkrementaci se musi tak     \item nacistuplne nove 4 urovne tabulek stranek - opet muze dojit k 4 vypadkum jako predtim
+    \item celkem 4 + 4 = 8 vypadku po nacteni instrukce
+    \end{itemize}
+    \item instrukce se musi spustit, presouva 8 KiB dat (pri 4 KiB strankach), 
+    \begin{itemize}
+        \item nejhorsi pripad - src data o velikosti 8 KiB jsou rozlozena na 3 strankach (2 KiB 1 stranka, 4 KiB druha, 2 KiB treti),
+    \item dst data budou obdobne,
+    \item abych dostal prvni stranku src, muze opet dojit ke 4 vypadkum,
+    \item pri praci s druhou strankou - opet prvni je na konci seznamu, tedy +1 bude uplne v jinych tabulkach - dalsi +4 vypadky,
+    \item posledni stranka - protoze LA nasleduji za sebou, prvni dve stranky byly na rozmezi (konec - zacatek tabulek), potom +1 nyni bude ve stejnych tabulkach stranek jako predchozi - tedy +1 vypadku stranek (je mozny pouze vypadek na urovni ramce)
+    \item celkem +9 vypadku
+    \item u dst uplne stejny pripad jako u src - tedy +9 vypadku
+    \item provadeni instrukce zabere tak 9+9 vypadku = 18 vypadku, \\
+    \end{itemize}
+    \item tedy dohromady pri vykonani jedne teto instrukce muze dojit celkem 8 + 18 = 26 vypadku stranek (maximalni mozny pocet, nejhorsi pripad) \\
+\end{itemize}
+
+\subsection{Odkladani stranek}
+K tomuto muze dojit pri vypadku stranky. Muze byt odlozeni:
+\begin{itemize}
+    \item lokalni - v ramci procesu (u ktereho doslo k vypadku),
+    \item globalni - bez ohledu na to, kteremu procesu patri ktera stranka \\
+\end{itemize}
+
+Typicky je neustale udrzovan \textbf{urcity pocet volnych ramcu}:
+\begin{itemize}
+    \item pokud pocet volnych ramcu klesne pod urcitou mez, aktivuje se page daemon (zlodej stranek), ktery bezi tak dlouho, dokud neuvolni dostatecny pocet stranek,
+    \item pri vypadku stranky se pozuje ramec z mnoziny volnych ramcu,
+    \item lze doplnit heuristikou, ktera uvolene stranky okamzite neprideluje, ale zjistuje, jestli nebyla vybrana obet, ktera neni spravna \\
+\end{itemize}
+
+\subsection{Algoritmy vyberu odkladanych stranek (obeti)}
+
+\subsubsection{FIFO}
+\begin{itemize}
+    \item first in first out,
+    \item odstranuje stranku, ktera byla zavedena do pameti pred nejdelsi dobou (a nebyla dosud odstranena),
+    \item napr. proces pracujes se 4 strankami (1,2,3,4), chce patou, neni dost pameti - uvolni se stranka 1, ramec kde byla 1 se pouzije pro 5,
+    \item vyhody - jednoducha implementace,
+    \item problemy:
+    \begin{itemize}
+        \item muze odstranit starou stranku, ktera se ale casto pouziva,
+        \item trpi Beladyho anomalii - ocekavame, ze v systemu, ve kterem casto dochazi k odkladani a zvetsi se pamet systemu, tak k odkladani bude dochazet mene casto - to zde pravda byt nemusi - pocet vypadku vzroste pri zvetseni pameti,
+    \end{itemize}
+    \item da se trochu zmenit - omezit problem s odstranovanim starych ale pouzivanych ramcu - umistime takovy ramec do mnoziny volnych ramcu, pridelime jiny volny ramec, pokud bychom chteli ramec pouzit, ihned se ziska tento uvolneny ramec (signal - spatna obet, vybere se jina), pokud ne - odlozi se \\
+\end{itemize}
+
+\subsubsection{LRU}
+\begin{itemize}
+    \item least recently used,
+    \item snazi se okladat nejdele nepouzitou stranku,
+    \item dobra aproximace hypotetickeho idealniho algoritmu (znal by budoucnost a podle pozadavku z budoucnsti by rozhodoval, co aktualne odlozit tak, aby byl pocet vypadku minimalni - zatim to nejde)
+    \item problemy:
+    \begin{itemize}
+        \item pri cyklickych pruchodech poli se algoritmus muze chovat velmi pomalu - napr. system se 4 ramci, delam bubble sort na 5 pametovych blocich (prvni 4 bloky budou na vsech ramcich, zpracuji posledni - prvni vyhodim a dam na prvni ramec, pote potrebuji neco pro prvni blok - vyhodim druhy ramec, ... porad dokola ..)
+    \item resi se to napriklad strategii odstraneni naposledy pouzite stranky (MRU - most recently used)
+    \item dalsi problem je problematicka implementace - je nutne umet detekovat pouzitou stranku (nutna HW podpora, napr. casove razitko)
+    \end{itemize}
+    \item pouzivaji se aproximace LRU \\
+\end{itemize}
+
+Aproximace LRU \textbf{pomoci omezene historie referencniho bitu stranek} (page againg):
+\begin{itemize}
+    \item pouzije se jeden bit - referencni bit,
+    \item tento bit hw nastavi pri kazdem pristupu na 1,
+    \item jadro si vede omezenou historii tohoto bitu (pro jednotlive stranky),
+    \item periodicky se posouva obsah historie doprava (aka: shiftuje se referencni bit doprava),
+    \item pote se referencni bit v tabulce stranek vynuluje,
+    \item pote pri vyberu obeti jadro projde vsechny historie a vybere z nich nejmensi hodnotu (zn. pouzivala se stranka pred nejdelsi dobou) \\
+\end{itemize}
+
+Aproximace LRU \textbf{algoritmem druhe sance}:
+\begin{itemize}
+    \item stranky jsou ulozeny v kruhovem seznamu,
+    \item mame jeden ukazatel, ten seznam prochzaime,
+    \item vynulujeme referencni bit dane stranky,
+    \item pokud uz bude 0, pouzijeme danou stranku jako obet,
+    \item take se tomu rika clock algorithm \\
+\end{itemize}
+
+\textbf{Modifikace algoritmu druhe sance:}
+\begin{itemize}
+    \item uprednostnuji se jako obeti nemodifikovane strane (usetri se 1 zapis na disk) - modifikovane se zapisi na disk a dostanou dalsi sanci,
+    \item dva ukazatele, ktere prostupuji frontou - jeden nuluje referencni bit, druhy odstranuje obeti (double-handed clock algorithm),
+    \item linux:
+    \begin{itemize}
+        \item fronty aktivnich a neaktivnich stranek - pokud nejaka stranka je behem 1 periody zpristupnena 2x, tak se presune do fronty aktivnich stranek, pokud ne, prehodi se do fronty neaktivnich stranek (z te se vybiraji obeti),
+    \item system se snazi odkladat stranky, ktere jsou pouzite pro ruzne cache, pokud maji procesy namapovany urcity pocet \item stranek, OS se snazi odstranovat jeho neaktivni stranky,
+    \item odkladani se provadi po urcitych poctech (najednou), cim vice je pamet zaplnena, tim vice se ramcu uvolni,
+    \item je mozne nastavit procesu priznak, aby se jeho stranky neodkladaly (nebyly obeti),
+    \item pri kritickem nedostatku pameti jadro ukoncuje nektere procesy (vetsinou: pokud dojde RAM i swap zaroven) - pro \item spoustu pripadu to byva ale az pozde,
+    \item v linuxu je zde sluzba EarlyOOM (neni sluzba jadra!) - zacne tyto procesy ukoncovat driv pri nedostatku pameti \\
+    \end{itemize}
+\end{itemize}
+
+\subsection{Alokace ramcu procesum (resp. jadru)}
+\begin{itemize}
+    \item dulezite hlavne u lokalniho vyberu,
+    \item u globalniho vyberu lze pouzit pro rizeni vyberu obeti,
+    \item je treba mit vzdy pridelen minimalni pocet ramcu pro provedeni 1 instrukce - jinak dojde k nekonecnemu vymenovani stranek potrebnych k provedeni instrukce,
+    \item dale se pouzivaji ruzne heuristiky pro urceni poctu ramcu pro procesy:
+    \begin{itemize}
+        \item podle velikost programu, priority, objemu fyzicke pameti, ..,
+        \item na zaklade pracovni mnoziny stranek - mnozina stranek, ktere pouziva proces za nejakou urcitou dobu (aproximace s pomoci referencnciho bit),
+        \item sledovani frekvence vypadku procesu (vice vypadku, casteji - proces dostane vice fyzicke pameti) \\
+    \end{itemize}
+\end{itemize}
+
+Pridelovani ramcu \textbf{s vyuzitim pracovni mnoziny, kombinace lokalni a globalni vymeny vyuzivaji nektere systemy Windows}:
+\begin{itemize}
+    \item procesy a jadro maji jisty minimalni a maximalni porcet ramcu
+    \item pokud je dost pameti, ramce se jim dodavaji az do dosaseni maxima (muze se i zvetsit),
+    \item pokud se dosahne maxima a neni dost pameti, provede se lokalni vymena,
+    \item pokud je volnych ramcu vyrazny nedostatek, OS zacne prochazet bezici procesy a zacne jim odebirat urcity pocet stranek na zaklade omezene historie pristupu
+    \item pri vyberu obeti se dava prednost procesum bezicim mene casto,
+    \item snazi se vyhybat tem procesum, ktere bezi na popredi ci tem procesum, ktere mely v posledni dobe mnoho vypadku,
+    \item pocatecni meze pracovnich meze se zjisti pri startu systemu dle velikosti fyzicke pameti,
+    \item pri odkladani na disk vybrane obeti ji da jeste 2. sanci - necha si ji jeste chvili v pameti, pridaji ji jiny ramec, aby bylo mozne korigovat chyby pri volbach obeti,
+    \item umi swapovat vsechna data procesu na disk (typicky dlouho neaktivni proces) \\
+\end{itemize}
+
+\subsection{Trashing}
+Problem, ktery muze nastat pri odkladani stranek na disk. Vznikne pokud mame \textbf{system s vysokou mirou paralelismu} (resp. mnoho spustenych procesu) - procesy potrebuji nejaky \textbf{minimalni pocet ramcu, se kterymi musi pracovat}. Pokud je pocet procesu velky, pameti \textbf{je malo a casto muze dochazet k odkladani na disk}. Potom muze dojit k tomu, ze \textbf{proces stravi vice casu nahradou stranek nez uzitecnym vypoctem}.
+
+Obcas v nejakych OS je \textbf{swapper} (sluzba OS), ten pozastavi nektere procesy a odlozi veskerou pamet na disk. Nebo je moznosti ukoncit nektere procesy.
+
+\subsection{Poznamky}
+\textbf{Prepaging} - do fyzicke pameti zavadi vice stranek zaroven (start procesu, po odswapovani, .. - zrychleni).
+
+\textbf{Zamkykani stranek:}
+\begin{itemize}
+    \item zabranuje se odlozeni,
+    \item uziva se napr. u stranek, do nichz probiha I/O (stranky se mohou mapovat do zarizeni - nechceme tyto stranky ukladat na disk), u (casti) tabulek stranek (napr. nejvyssi uroven), u (nekterych) stranek jadra, na prani uzivatele (napr. v pameti pracujeme s citlivymi daty)
+\end{itemize}
+
+\textbf{Sdileni stranek}
+Da se sdilet:
+\begin{itemize}
+    \item kod programu (proces vicekrat spusteny, neni treba mit stejny kod v pameti nekolikrat nebo sdilene knihovny),
+    \item konstantni data ci doposud nemodifikovana data u kopii procesy (copy-on-write technologie),
+    \item mechanismus IPC (2 procesy mohou sdilet stejnou pamet, pouzivaji ji treba pro synchronizaci),
+    \item sdileni pametove mapovanych souboru \\
+\end{itemize}
+
+\textbf{Sdilene knihovny}
+\begin{itemize}
+    \item ulozene ve FAP pouze jednou,
+    \item .dll ci .so,
+    \item vyhody - mensi programy (neni nutne do programu dat vsechny funkce, cast muze byt v knihovne), lepsi vyuziti prostoru na disku, moznost aktualizovat knihovny,
+    \item nevyhody - zavislost programu na dalsich souborech a verzich knihoven, mozny pomalejsi start programu (knihovna zas muze byt jiz v pameti), mozne pomalejsi volani funkci (kompilator zde nemuze provadet optimalizace - v knihovne, navic volani musi jit pres sestavovaci tabulky) \\
+\end{itemize}
+
+\textbf{Copy-on-write}
+\begin{itemize}
+    \item pri spusteni fork se nevytvori kopie veskere pameti procesu,
+    \item tedy mam dve LA, ale
+    \item oba procesy sdileji stejne ramce v FAP, ty jsou oznaceny jako copy-on-write,
+    \item znamena, ze stranky se sdili mezi procesy, dokud jeden z procesu do nich nezapise \\
+\end{itemize}
+
+\textbf{Sdilena pamet}
+\begin{itemize}
+    \item shared memory,
+    \item forma IPC, vice procesu ma mapovany stejne fyzicke stranky do LAP \\
+\end{itemize}
+
+\textbf{Pametove mapovane soubory}
+\begin{itemize}
+    \item cely soubor se namapuje do LAP,
+    \item procesy si soubor namapuji do sveho LAP, pracuji s nim jakoby pristupovali do pameti,
+    \item vyuziti strankovani na zadost pro praci se soubory,
+    \item pouziti napr. pri praci s databazemi,
+    \item dostupne napr. prostrednictvim mmap(); \\
+\end{itemize}
+
+
+\textbf{Pametove regiony}
+\begin{itemize}
+    \item jednotka vyssiho strukturovani pameti v UNIXu,
+    \item v ramci pametoveho reginu je kazda adresa (region pro kod, haldu, zasobnik, data, ..),
+    \item pouzivaji segmentove registry, neukazuji na pocatky segmentu, ale o jaky region jde (pro zasobnik, kod, ..),
+    \item umoznuje jisty druh prace s danou pameti,
+    \item napr. region s kodem - je mozne zakazat zapis \\
+\end{itemize}
+
+\textbf{Standardni rozlozeni adresoveho prostoru procesu v Linuxu (i386):}
+\begin{itemize}
+    \item region na adrese 0 - nepouzity,
+    \item nad nim je text segment - kod programu (provadeni kodu, zadny zapis),
+    \item segment se statickymi inicializovanymi daty (modifikace, ale nespoustet),
+    \item prostor pro neinicializovane staticke promenne (zaplneno nulami),
+    \item halda (heap) - prace pres volani malloc pres C napr., roste od nejake adresy nahoru,
+    \item pamet pouzita na mapovani LAP na sdilene ramce pameti ci sdilena pametova mista,
+    \item zasobnik (stack),
+    \item nejvyse je prostor namapovany pro funkce kernelu - kernel space \\
+\end{itemize}
+
+\newpage
+
+\vspace{\stretch{0.382}}
+{\Huge THE END}
+\vspace{\stretch{0.618}}
 
 \end{document}
