@@ -1,2 +1,2 @@
-# FIT-IOS-notes
-Poznamky z prednasek IOS
+# FIT IOS notes
+Poznámky z přednášek IOS.
