@@ -43,7 +43,7 @@ the Little Book of IOS\\[0.4em]
 {\Huge Poznámky z přednášek}
 \vspace{\stretch{0.618}}
 \end{center}
-{\Large 2019/2020 \hfill Corse\scriptsize\,\&\,LeO}
+{\Large 2019/2020 \footnotesize(PDF z \today) \hfill \Large Corse\footnotesize\,\&\,LeO}
 
 \end{titlepage}
 
@@ -339,7 +339,7 @@ Jedná se o nejnižší a nejzákladnější část OS. Zavádí se jako první 
 \textbf{Podle účelu:}
 \begin{itemize}
     \item univerzální (UNIX, Linux, Windows, \ldots)
-    \item specializované (real-time: RT-Linux, databáze, web, mobilní - iOS, Android)
+    \item specializované (real-time: RT-Linux, databáze, web, mobilní -- iOS, Android)
 \end{itemize}
 
 \textbf{Podle počtu uživatelů:}
@@ -612,7 +612,7 @@ Synchronní komunikace je proces--jádro, asynchronní je hardware--jádro. Deta
 
 \item[synchronní] -- CPU něco provede a ihned se zavolá přerušení (např. dělení 0)
 
-\item[řadič přerušení] -- interrupt controller, hardwarová jednotka, která předává přerušení do CPU -- registruje příchozí IRQ, ty se dle priorit předávají do CPU (přerušení je možné také zamaskovat -- nepředávat dál do CPU) v podobě čísla přerušení, CPU se automaticky přepne do chráněného režimu a spustí obslužnou rutinu definovanou jádrem (přerušení 1 - provede xxx, 2 - xxx, \ldots)
+\item[řadič přerušení] -- interrupt controller, hardwarová jednotka, která předává přerušení do CPU -- registruje příchozí IRQ, ty se dle priorit předávají do CPU (přerušení je možné také zamaskovat -- nepředávat dál do CPU) v podobě čísla přerušení, CPU se automaticky přepne do chráněného režimu a spustí obslužnou rutinu definovanou jádrem (přerušení 1 -- provede xxx, 2 -- xxx, \ldots)
 
 \item[APIC] -- Advanced Programmable Interrupt Controller, distribuovaný systém, každý CPU má lokální APIC, externí zařízení mohou být připojena přímo, nebo přes I/O APIC
 
@@ -819,8 +819,8 @@ Různých typů RAID je několik (tzv. raid levels):
     \item nejsložitější, proto se příliš nepoužívá,
     \item používá zabezpečovací Hemingovy kódy,
     \item k určitému počtu datových disků je určitý počet zabezpečovacích disků,
-    \item data se ukládají na datových discích na úrovni bytů, k nim se dopočítávají zabezpečovací kódy (např. 4 datové + 3 zabezpečovací),
-    \item byty dat se rozloží do všech disků (zapisuje se po sektorech)
+    \item data se rozdělují a ukládají na datových discích na úrovni bitů, k nim se dopočítávají zabezpečovací kódy (např. 4 datové + 3 zabezpečovací),
+    \item bity dat se rozloží do všech disků (zapisuje se po sektorech)
     \item jediný RAID, který umí detekovat chyby, některé i sám opravit, dokonce umí i zjistit, který disk selhal
 \end{itemize}
 
@@ -828,7 +828,8 @@ Různých typů RAID je několik (tzv. raid levels):
 
 \subsubsection{RAID 3}
 \begin{itemize}
-    \item jednodušší zabezpečení než RAID 2 v podobě \emph{paritních bytů},
+    \item v praxi se nepoužívá
+    \item jednodušší zabezpečení než RAID 2 v podobě \emph{paritních bitů},
     \item rozkládá data po bytech či skupinách bytů, které zabezpečuje paritním zabezpečením (např. 4 disky -- 3 datové a 1 paritní)
 \end{itemize}
  
@@ -915,7 +916,7 @@ Externí fragmentace je i na plně obsazeném disku, kde stačí, aby byl disk o
     \begin{itemize}
         \item při alokování diskového prostoru spojitě (na míru souboru či jeho částem, nepřidělování po jednotkách pevné velikosti) a navíc budu mít dolní mez určující velikost diskového prostoru tak, aby byl použitelný (může vzniknout v souvislosti s tím, že do použitých diskových oblastí si mohu ukládat pomocné informace, k čemu se používají pokud bude informace větší než „volná díra“ -- nepoužitelná)
         \item mám na disku bloky volného místa o požadované velikosti (1~GB, soubor 0,5~GB), ale protože chci ukládat spojitě (soubor o velikosti 1,5~GB), nelze takové místo využít
-        \item vznikne nespojitě rozložený soubor (viz příklad) a je nutné si pamatovat v pomocných datech = metadatech informace o tom, kde jednotlivé části souboru jsou (ukládají se na místa, kde jednotlivé části jsou, "odkazují" se na další metadata - další části smazaného souboru),
+        \item vznikne nespojitě rozložený soubor (viz příklad) a je nutné si pamatovat v pomocných datech = metadatech informace o tom, kde jednotlivé části souboru jsou (ukládají se na místa, kde jednotlivé části jsou, „odkazují“ se na další metadata -- další části smazaného souboru),
     \end{itemize}
     \item čím více částí souboru, tím více metadat -- čím více fragmentované, tím více je přístup na data pomalejší (u HDD se čeká navíc na natočení hlaviček a rotace disku)
 \end{itemize}
@@ -1364,7 +1365,7 @@ Jistou optimalizací používanou i u klasických FS pro malé soubory je ulože
 
 \begin{figure}[htb]
     \centering
-    \scalebox{2}{\includegraphics{6.3.4.jpg}}
+    \includegraphics[width=\textwidth]{6.3.4.jpg}
     \caption{Z prezentace IOS: Souborové systémy, slide 27 -- B+ strom}
 \end{figure}
 
@@ -1427,7 +1428,7 @@ Používá pro popis rozložení dat na disku strom extentů. Pro „malé soubo
 \end{description}
 
 \subsection{NTFS}
-Základní datovou strukturou popisující disk je MFT - Master File Table (má pro každý soubor alespoň 1 řádek, na 0. řádku popisuje samo sebe, 1. řádek případně kopie MFT, případně metadata, poté obsahy souborů).
+Základní datovou strukturou popisující disk je MFT -- Master File Table (má pro každý soubor alespoň 1 řádek, na 0. řádku popisuje samo sebe, 1. řádek případně kopie MFT, případně metadata, poté obsahy souborů).
  
 \textbf{Obsah souboru může být reprezentován buď:}
 \begin{itemize}
@@ -1637,7 +1638,7 @@ V UNIXu jsou typicky rozlišena na práva pro \emph{vlastníka}, \emph{skupinu v
 \tcmd{newgrp} -- nový shell s jiným aktuálním GID
 
 \subsection{Typy přístupových práv}
-\textbf{Obyčejné soubory:} r, w, x - právo číst, zapisovat a spustit soubor jako program.
+\textbf{Obyčejné soubory:} r, w, x -- právo číst, zapisovat a spustit soubor jako program.
  
 \textbf{Adresáře:}
 \begin{itemize}
@@ -1675,7 +1676,7 @@ Vlastník programu může propůjčit svá práva komukoliv, kdo spustí program
 Při použití SUID bitu bude UID = uživatele, který proces spustil a EUID = identifikace vlastníka (= který práva půjčil). Pokud budou práva propůjčená (použito SUID), místo x se vypíše s, pokud tam x není, vypíše se S.
 
 \subsection{Typická struktura adresářů v UNIXu}
-\textbf{FHS - Filesystem Hierarchy Standard (Linux), (část hierarchie):}
+\textbf{FHS -- Filesystem Hierarchy Standard (Linux), (část hierarchie):}
 \begin{itemize}
     \item /bin -- programy pro všechny uživatele (spustitelné, mohou být zapotřebí při bootování, musí být dostupné lokálně)
     \item /boot -- soubory pro zavaděč systému (obrazy jádra, počáteční FS)
@@ -1847,7 +1848,7 @@ Náhodné přesouvání v souboru. \textbf{Postup:}
     \item zkontroluje, zda je popisovač platný (je soubor otevřen?)
     \item nastaví pozici
     \begin{itemize}
-        \item SEEK\_SET -- napr. 200 - posunu se od 200 bajtů od začátku,
+        \item SEEK\_SET -- např. 200 -- posunu se od 200 bajtů od začátku,
         \item SEEK\_CUR -- od aktuální pozice,
         \item SEEK\_END -- od konce souboru,
     \end{itemize}
@@ -1934,9 +1935,9 @@ Je možné provést unlink na otevřený soubor (smaže se až po jeho uzavřen�
 \tcmd{truncate, ftruncate} -- zkrácení souboru \\[0.2em]
 \tcmd{fcntl, lock} -- zamykání záznamů \\[0.2em]
 \tcmd{chmod, chown} -- změna atributů \\[0.2em]
-\tcmd{utime}- - umožňuje změnit časy práce se soubory (neumožňuje změnit čas modifikace i-uzlu) \\[0.2em]
+\tcmd{utime}- -- umožňuje změnit časy práce se soubory (neumožňuje změnit čas modifikace i-uzlu) \\[0.2em]
 \tcmd{stat} -- získání atributů (velikost, práva, \ldots) \\[0.2em]
-\tcmd{sync, fsync} - vynucení si zápisu vyrovnávacích pamětí na disk
+\tcmd{sync, fsync} -- vynucení si zápisu vyrovnávacích pamětí na disk
 
 \subsubsection{Adresářové soubory}
 Obsahuje dvojice číslo i-uzlu a jména souborů. Adresáře nelze zapisovat či číst po bajtech.
@@ -1994,7 +1995,7 @@ Terminály jsou fyzická či logická zařízení umožňující (primárně) te
     \item /dev/tty -- pro každý proces, který má řídicí terminál, odkazuje na jeho řídicí terminál
     \item /dev/ttyS1 -- fyzické terminály na sériové lince,
     \item /dev/tty1 -- virtuální terminály (konzole),
-    \item pseudoterminály (/dev/ptmx -- master, /dev/pts/1, \ldots) tvořený dvojicí master/slave, po každém otevřením se vytvoří nový slave -- emuluje komunikaci přes sériovou linku (umožňuje pro propojení určitých částí, např. SSH - propojení klienta se vzdáleným klientem) \\
+    \item pseudoterminály (/dev/ptmx -- master, /dev/pts/1, \ldots) tvořený dvojicí master/slave, po každém otevřením se vytvoří nový slave -- emuluje komunikaci přes sériovou linku (umožňuje pro propojení určitých částí, např. SSH -- propojení klienta se vzdáleným klientem) \\
 \end{itemize}
  
 \textbf{Různe režimy zpracování znaků} (řádkové disciplíny, line discipline):
@@ -2173,7 +2174,7 @@ Nejzákladnější plánovací diagram (většiny různých OS) -- \textbf{stavy
 \begin{figure} [ht]
     \centering
     \includegraphics[width=\textwidth]{8.6_1.jpg}
-    \caption{Z prezentace IOS: Správa procesu - stavový diagram obecného plánování procesu}
+    \caption{Z prezentace IOS: Správa procesu -- stavový diagram obecného plánování procesu}
 \end{figure}
 
 \newpage
@@ -2286,7 +2287,7 @@ Kontext je jiné označení pro \textbf{stav procesu}. Rozlišujeme:
     \item identifikace předka PPID (proces, který daný proces vytvořil, rodič),
     \item uživatel (a skupina), který proces spustil -- UID, GID,
     \item efektivní uživatel či skupina -- EUID, EGID (viz \ref{seuid}),
-    \item uložené EUID a EGID - procesům umožňují dočasně se zbavit vysokých práv, která získal (proces se dobrovolně vzdá vyšších práv --- uloží se a poběží s běžnými právy -- v okamžiku provádění kritických operací si práva zase navýší -- ochrana před chybami v programech),
+    \item uložené EUID a EGID -- procesům umožňují dočasně se zbavit vysokých práv, která získal (proces se dobrovolně vzdá vyšších práv --- uloží se a poběží s běžnými právy -- v okamžiku provádění kritických operací si práva zase navýší -- ochrana před chybami v programech),
     \item v Linuxu FSUID, FSGID (filesystem UID/GID -- oddělená zvýšená privilegia pro práci s FS),
     \item PGID, SID (process group identifier, session identifier -- skupina procesů či sezení, do kterých proces patří)
 \end{itemize}
@@ -2464,7 +2465,7 @@ Přepnutí může trvat \textbf{řádově stovky až tisíce instrukcí/cyklů} 
 \section{}
 \textbf{Devátá přednáška:} Dokončení správy procesů.
 
-\subsection{Krátké plánovací algoritmy}
+\subsection{Klasické plánovací algoritmy}
 \subsubsection{FCFS}
 \begin{itemize}
     \item \emph{first come, first served},
@@ -2746,9 +2747,9 @@ Měli bychom na signály čekat \textbf{pasivně} (nikoli se aktivně neustále 
 \newpage
 
 \section{}
-\textbf{Desátá přednáška:} Nové téma -- synchronizace procesu.
+\textbf{Desátá přednáška:} Nové téma -- synchronizace procesů.
 
-\subsection{Synchronizace procesu} \label{synchronizace-procesu}
+\subsection{Synchronizace procesů} \label{synchronizace-procesu}
 Synchronizace slouží k tomu, aby procesy navzájem \textbf{nekolidovaly a v systému nedocházelo k nekonzistentním stavům či poruchám dat.} Aby při běhu procesu nedošlo k nekonzistenci dat, používá se synchronizace procesů, která zajišťuje správné pořadí provádění spolupracujících procesů.
  
 Když jádro dává \textbf{časové kvantum nějakému procesu, znamená to, že dává procesu nějaký časovač}, a když doběhne, \textbf{spustí se přerušení}.
@@ -2854,7 +2855,7 @@ Lze je však využít \textbf{na krátkých, neblokujících kritických sekcíc
 Přístup do paměti (RAM) od CPU trvá kolem 100--150 cyklů. Opakovaný zápis sdíleného paměťového místa je problematický z hlediska \textbf{zajištění konzistence cache v multiprocesorových systémech} (zatěžuje se sdílená paměťová sběrnice) -- řešením je při aktivním čekání \textbf{pouze číst}.
 
 \subsection{Semafory}
-Semafor je synchronizační nástroj nevyžadující aktivní čekání (nebo alespoň minimalizující- - může se vyskytnout uvnitř implementace operací nad semaforem). Jedná se o \textbf{celočíselnou proměnnou dostupnou pouze dvěma základními atomickými operacemi}: 
+Semafor je synchronizační nástroj nevyžadující aktivní čekání (nebo alespoň minimalizující- -- může se vyskytnout uvnitř implementace operací nad semaforem). Jedná se o \textbf{celočíselnou proměnnou dostupnou pouze dvěma základními atomickými operacemi}: 
 \begin{itemize}
     \item \tcmd{lock} (také \tcmd{decrement}, \tcmd{wait} nebo \tcmd{P}) -- zamknutí semaforu, proces čeká než může vstoupit do kritické sekce, vstoupí do ní, ostatní procesy budou čekat,
     \item \tcmd{unlock} (také \tcmd{increment}, \tcmd{signal} nebo \tcmd{V}, v POSIXu \tcmd{sem\_post}) -- odemknutí semaforu, jeden (či více) z čekajících procesů se probudí a dostane se do kritické sekce.
@@ -2901,12 +2902,12 @@ Používají se také:
 \textbf{Implementace semaforu:}
 Implementace semaforu (konkrétně \tcmd{lock} a \tcmd{unlock}) tvoří další kritické sekce, které se také musí zabezpečit (zamknout) \textbf{jiným synchronizačním prostředkem}. Používá se spinlock na začátku obou funkcí, následně odemknutí spinlocku před výstupem z nich.
  
-U zkoušky se implementuje semafor doplněný o kód spinlocku (TestAndSet nebo swap). Zde spinlock (na začátku) pouze chrání kritickou sekci lock a unlock - aktivní čekání se zde dá tolerovat.
+U zkoušky se implementuje semafor doplněný o kód spinlocku (TestAndSet nebo swap). Zde spinlock (na začátku) pouze chrání kritickou sekci lock a unlock -- aktivní čekání se zde dá tolerovat.
 
 \begin{figure} [ht]
     \centering
-    \includegraphics[scale=2]{10.6_1.jpg}
-    \includegraphics[scale=2]{10.6_2.jpg}
+    \includegraphics[width=\textwidth]{10.6_1.jpg}
+    \includegraphics[width=\textwidth]{10.6_2.jpg}
     \caption{Z prezentace IOS: Synchronizace procesů -- kod implementace semaforu}
 \end{figure}
 
@@ -2922,7 +2923,7 @@ Proto vznikl komfortnější synchronizační mechanismus -- monitory. V syntakt
 \begin{figure}[ht]
     \centering
     \includegraphics[scale=2]{11.1_1.jpg}
-    \caption{Z prezentace IOS: Synchronizace procesů - kód monitoru}
+    \caption{Z prezentace IOS: Synchronizace procesů -- kód monitoru}
 \end{figure}
  
 \textbf{Monitor:}
@@ -3200,7 +3201,7 @@ Základní společná myšlenka všech řešení je \textbf{princip, kterým se 
     \item druhá (vlastnictví)
     \begin{itemize}
         \item proces může žádat o prostředky pouze tehdy, pokud žádné nevlastní,
-        \item (když chce proces používat současně 5 zdrojů v jednom okamžiku, musí zamknout všechny současně -- získá, nebo čeká -- systematicky v kódu zamykám všechny zdroje, nebo žádný zdroj - kontrola zámku: pokud proces již něco zamkl, nemůže znovu zamykat -- musí vše uvolnit a teprve poté může zamknout),
+        \item (když chce proces používat současně 5 zdrojů v jednom okamžiku, musí zamknout všechny současně -- získá, nebo čeká -- systematicky v kódu zamykám všechny zdroje, nebo žádný zdroj -- kontrola zámku: pokud proces již něco zamkl, nemůže znovu zamykat -- musí vše uvolnit a teprve poté může zamknout),
         \item nevýhodou je nutnost zamknutí všech zdrojů, které se používají současně (např. 30 min se používá 1 zdroj, poté 1 min se používá další zdroj současně s prvním, ale musí se zamknout na 30 min oba zdroje),
     \end{itemize}
     
@@ -3251,7 +3252,7 @@ Dalo by se to se chápat jako prevence 4. Coffmanovy podmínky.
     \item řeší problém vyhýbání se uváznutí,
     \item pouze systémy, kde má každý zdroj pouze jednu instanci,
     \item je veden systémem, který zdroje přiděluje, ten si průběžně udržuje graf vztahů mezi procesy a zdroji: dva typy uzlů (procesy a zdroje) a tři typy hran -- hrany od zdroje k procesu (který zdroj je kým vlastněn), hrany od procesu ke zdroji (kdo o který proces \emph{žádá} a kdo o který zdroj \emph{může požádat}),
-    \item zdroj je přidělen pouze tehdy, pokud systém posoudí, že v budoucnu nemůže nastat cyklická závislost procesů, jednoduše tím, že „cvičně" provede otočení žádostí na hranu vlastnictví (z P2 do R2 udělá R2 do P2), pokud v té situaci vznikne v grafu cyklus, znamená to, že v budoucnu by mohl vzniknout deadlock,
+    \item zdroj je přidělen pouze tehdy, pokud systém posoudí, že v budoucnu nemůže nastat cyklická závislost procesů, jednoduše tím, že „cvičně“ provede otočení žádostí na hranu vlastnictví (z P2 do R2 udělá R2 do P2), pokud v té situaci vznikne v grafu cyklus, znamená to, že v budoucnu by mohl vzniknout deadlock,
     \item v takovém okamžiku systém nepovolí přidělení zdroje (proces bude muset dál čekat na uvolnění zdroje, i když je volný)
 \end{itemize}
  
@@ -3533,7 +3534,7 @@ V nejjednodušším případě se používají \textbf{jednoduché -- jednoúrov
  
 Na řádku tabulky stránek, který odpovídá dané stránce, kde je uloženo odpovídající číslo rámce, \textbf{jsou uložené řídicí příznaky mapování -- platnosti mapování, přístupů, modifikace, přístupová práva} (r, rw, user režim, jádro režim, možnost provádění), \textbf{globality}.
  
-Tabulky stránek jsou udržovány v \textbf{hlavni paměti (RAM)}, \textbf{zvlášť} pro každý proces, MMU mají ve speciálním registru \textbf{pouze ukazatel na začátek tabulky stránek}, při přepínání kontextu se \textbf{mění pouze ukazatel} na začátek tabulky stránek. (Konkrétně u Intelu se ten registr jmenuje \emph{CR3}.)
+Tabulky stránek jsou udržovány v \textbf{hlavní paměti (RAM)}, \textbf{zvlášť} pro každý proces, MMU mají ve speciálním registru \textbf{pouze ukazatel na začátek tabulky stránek}, při přepínání kontextu se \textbf{mění pouze ukazatel} na začátek tabulky stránek. (Konkrétně u Intelu se ten registr jmenuje \emph{CR3}.)
  
 Neprovedeme-li žádnou další optimalizaci, tak každý jednotlivý přístup do paměti (pro data či instrukce) se změní \textbf{z jednoho přístupu na 2} (při načtení dat z RAM -- nejprve musím jít do tabulky stránek, poté načíst vlastní data -- obojí jsou v RAM) -- zpomalení o 100 procent. Používá se tak \textbf{vyrovnávací paměť TLB -- Translation Look-aside Buffer} pro urychlení práce s pamětí.
 
@@ -3644,7 +3645,7 @@ Je \textbf{důležité, aby bylo vyhledávání TLB úspěšné, jinak se přís
     \item inicializace 2 způsoby,
     \item první způsob inicializuje matici po sloupcích, druhý po řádcích,
     \item v případě přístupu po řádcích je v souladu s uložením paměti po řádcích -- bude výrazně efektivnější z hlediska možného počtu neúspěšného vyhledání TLB; přístup po sloupcích bude méně efektivní,
-    \item v případě TLB s jednou položkou nastane a 2x2 matice nastane při přístupu po řádcích 2x TLB miss, po sloupcích nastane 4x TLB miss
+    \item v případě TLB s jednou položkou a 2x2 matice, kde prvek zabírá půlku stránky, nastane při přístupu po řádcích 2x TLB miss, po sloupcích nastane 4x TLB miss
 \end{itemize}
  
 \subsection*{Definice:}
