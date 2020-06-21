@@ -2,7 +2,7 @@
 Poznámky z přednášek IOS.
 
 # Licence
-Toto dílo podléhá licenci Creative Commons Uveďte původ-Zachovejte licenci 4.0 Mezinárodní. 
+Toto dílo podléhá licenci Creative Commons 4.0 Mezinárodní. 
 
 Některé části dokumentu vycházejí z textů prezentací k předmětu, jejichž autorem je prof. Ing. Tomáš Vojnar, Ph. D., případně Ing. Ondřej Lengál, Ph. D.
 
